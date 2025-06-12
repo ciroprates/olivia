@@ -1,0 +1,25 @@
+{
+  "name": "olivia",
+  "version": "1.0.0",
+  "description": "Financial transactions viewer using Pluggy API",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ciroprates/olivia.git"
+  },
+  "keywords": [
+    "pluggy",
+    "finance",
+    "transactions",
+    "banking"
+  ],
+  "author": "Ciro Prates",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "pluggy-sdk": "^1.0.0"
+  }
+}
