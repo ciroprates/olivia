@@ -79,7 +79,7 @@ class TransactionService {
       const descriptionFormatted = formatDescription(transaction, recurringTransaction);
       const categoryFormatted = transaction.category || '';
       const ownerFormatted = formatOwner(account.owner);
-      const payerName = transaction.paymentData?.payer?.name || '';
+      const payerName = (transaction.paymentData && transaction.paymentData.payer && transaction.paymentData.payer.name) || '';
       
       return `"${classification}", "${date}", "${descriptionFormatted}", "${amount}", "${categoryFormatted}", "${ownerFormatted}", "${payerName}", "${bankName}", "${accountTypeFormatted}", "${recurringTransaction}"`;
     });
