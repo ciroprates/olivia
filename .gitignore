@@ -10,6 +10,8 @@ config.js
 # Logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Runtime data
 pids
@@ -25,4 +27,14 @@ pids
 
 # OS
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Arquivos de build
+dist/
+build/
+
+# Arquivos de cobertura de testes
+coverage/
+
+# Arquivos de saída
+output/ 

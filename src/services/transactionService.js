@@ -1,4 +1,6 @@
 const { PluggyClient } = require('pluggy-sdk');
+const fs = require('fs');
+const path = require('path');
 const {
   formatAmount,
   formatDate,
@@ -15,8 +17,11 @@ class TransactionService {
     });
   }
 
-  async _fetchTransactionsData(itemIds) {
+  async _fetchTransactionsData(itemIds, options = {}) {
+    const { includeCategories = null, excludeCategories = null } = options;
     const allTransactions = [];
+    const startDate = '2025-04-01';
+    const pageSize = 100; // Tamanho máximo de página da API
     
     for (const itemId of itemIds) {
       const item = await this.client.fetchItem(itemId);
@@ -27,15 +32,34 @@ class TransactionService {
         const accountsResponse = await this.client.fetchAccounts(itemId, accountType);
         
         for (const account of accountsResponse.results) {
-          const transactions = await this.client.fetchTransactions(account.id);
-          transactions.results.forEach(transaction => {
-            allTransactions.push({
-              transaction,
-              account,
-              bankName,
-              accountType
+          let page = 1;
+          let hasMore = true;
+          
+          while (hasMore) {
+            const transactions = await this.client.fetchTransactions(account.id, {
+              from: startDate,
+              page,
+              pageSize
             });
-          });
+            
+            transactions.results.forEach(transaction => {
+              const category = transaction.category;
+              const shouldInclude = !includeCategories || (category && includeCategories.includes(category));
+              const shouldExclude = excludeCategories && category && excludeCategories.includes(category);
+              
+              if (shouldInclude && !shouldExclude) {
+                allTransactions.push({
+                  transaction,
+                  account,
+                  bankName,
+                  accountType
+                });
+              }
+            });
+            
+            hasMore = transactions.page < transactions.totalPages;
+            page++;
+          }
         }
       }
     }
@@ -43,20 +67,48 @@ class TransactionService {
     return allTransactions;
   }
 
-  async fetchTransactions(itemIds) {
-    try {
-      const allTransactions = await this._fetchTransactionsData(itemIds);
+  _formatTransactions(transactions) {
+    const header = '"Classificação", "Data", "Descrição", "Valor", "Categoria", "Dono", "Banco", "Conta", "Recorrente?"\n';
+    const rows = transactions.map(({ transaction, account, bankName, accountType }) => {
+      const classification = transaction.type === 'DEBIT' ? 'Saída' : 'Entrada';
+      const date = formatDate(transaction.date);
+      const amount = formatAmount(transaction);
+      const accountTypeFormatted = formatAccountType(accountType);
+      const recurringTransaction = formatRecurringTransaction(transaction);
+      const descriptionFormatted = formatDescription(transaction, recurringTransaction);
+      const categoryFormatted = transaction.category || '';
       
-      allTransactions.forEach(({ transaction, account, bankName, accountType }) => {
-        const classification = transaction.type === 'DEBIT' ? 'Saída' : 'Entrada';
-        const date = formatDate(transaction.date);
-        const amount = formatAmount(transaction);
-        const accountTypeFormatted = formatAccountType(accountType);
-        const recurringTransaction = formatRecurringTransaction(transaction);
-        const descriptionFormatted = formatDescription(transaction, recurringTransaction);
-        
-        console.log(`${classification}, ${date}, ${descriptionFormatted},  ${amount}, ${transaction.category},  ${account.owner}, ${bankName}, ${accountTypeFormatted}, ${recurringTransaction}`);
-      });
+      return `"${classification}", "${date}", "${descriptionFormatted}", "${amount}", "${categoryFormatted}", "${account.owner}", "${bankName}", "${accountTypeFormatted}", "${recurringTransaction}"`;
+    });
+
+    return header + rows.join('\n');
+  }
+
+  _generateCSV(content) {
+    // Cria o diretório de saída se não existir
+    const outputDir = path.join(process.cwd(), 'output');
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir);
+    }
+
+    // Gera nome do arquivo com data e hora
+    const now = new Date();
+    const fileName = `transactions_${now.toISOString().slice(0,19).replace(/[:]/g, '-')}.csv`;
+    const filePath = path.join(outputDir, fileName);
+
+    // Prepara e escreve o conteúdo do CSV
+    
+    fs.writeFileSync(filePath, content);
+    
+    return filePath;
+  }
+
+  async fetchTransactions(itemIds, options = {}) {
+    try {
+      const allTransactions = await this._fetchTransactionsData(itemIds, options);
+      const content = this._formatTransactions(allTransactions);
+      const filePath = this._generateCSV(content);
+      console.log(`\nArquivo CSV gerado: ${filePath}`);
     } catch (error) {
       console.error('Error:', error.message);
     }
