@@ -7,5 +7,18 @@ const transactionService = new TransactionService(
   process.env.PLUGGY_CLIENT_SECRET
 );
 
+async function main() {
+  
+  // Fetch and display transactions
+  console.log('\nTransactions:');
+  await transactionService.fetchTransactions(itemIds);
+
+  // Get unique categories
+  const categories = await transactionService.getUniqueCategories(itemIds);
+  console.log('\nUnique Categories:');
+  console.log(categories.join('\n'));
+  
+}
+
 // Run the application
-transactionService.fetchTransactions(itemIds); 
+main(); 
