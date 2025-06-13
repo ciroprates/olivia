@@ -76,10 +76,10 @@ class TransactionService {
       const amount = formatAmount(transaction);
       const accountTypeFormatted = formatAccountType(accountType);
       const recurringTransaction = formatRecurringTransaction(transaction);
-      const descriptionFormatted = formatDescription(transaction, recurringTransaction);
+      const payerName = (transaction.paymentData && transaction.paymentData.payer && transaction.paymentData.payer.name) || '';
+      const descriptionFormatted = formatDescription(transaction, recurringTransaction) + (payerName ? ` - ${payerName}` : '');
       const categoryFormatted = transaction.category || '';
       const ownerFormatted = formatOwner(account.owner);
-      const payerName = (transaction.paymentData && transaction.paymentData.payer && transaction.paymentData.payer.name) || '';
       
       return `"${classification}", "${date}", "${descriptionFormatted}", "${amount}", "${categoryFormatted}", "${ownerFormatted}", "${payerName}", "${bankName}", "${accountTypeFormatted}", "${recurringTransaction}"`;
     });
