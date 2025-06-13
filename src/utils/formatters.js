@@ -21,16 +21,9 @@ function formatRecurringTransaction(transaction) {
 }
 
 function formatDescription(transaction, recurringTransaction) {
-  const description = transaction.description;
-  if (recurringTransaction === 'Sim' && transaction.creditCardMetadata) {
-    const installmentSufix = `${transaction.creditCardMetadata.installmentNumber}/${transaction.creditCardMetadata.totalInstallments}`;
-    if (!description.includes(installmentSufix)) {
-      return `${description} - ${installmentSufix}`;  
-    }
-  }
-  return description;
+  const payerName = (transaction.paymentData && transaction.paymentData.payer && transaction.paymentData.payer.name) || '';
+  return `${transaction.description}${recurringTransaction ? ` (${recurringTransaction})` : ''}${payerName ? ` - ${payerName}` : ''}`;
 }
-
 
 function formatOwner(owner) { 
   
@@ -39,8 +32,6 @@ function formatOwner(owner) {
   
   return `${names[0]} ${names[names.length - 1]}`;
 }
-
-
 
 module.exports = {
   formatAmount,
