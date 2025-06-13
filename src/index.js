@@ -13,12 +13,7 @@ function formatAmount(transaction) {
     ? transaction.amountInAccountCurrency 
     : transaction.amount;
     
-  return Math.abs(amount).toLocaleString('en-US', { 
-    style: 'currency', 
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).replace('BRL', 'R$');
+  return Math.abs(amount).toFixed(2);
 }
 
 function formatDate(date) {
@@ -28,6 +23,22 @@ function formatDate(date) {
 
 function formatAccountType(accountType) {
   return accountType === 'BANK' ? 'Conta Corrente' : 'Cartão de Crédito';
+}
+
+function formatRecurringTransaction(transaction) {
+  const totalInstallments = transaction.creditCardMetadata && transaction.creditCardMetadata.totalInstallments;
+  return totalInstallments > 1 ? 'Sim' : 'Não';
+}
+
+function formatDescription(transaction, recurringTransaction) {
+  const description = transaction.description;
+  if (recurringTransaction === 'Sim' && transaction.creditCardMetadata) {
+    const installmentSufix = `${transaction.creditCardMetadata.installmentNumber}/${transaction.creditCardMetadata.totalInstallments}`;
+    if (!description.includes(installmentSufix)) {
+      return `${description} - ${installmentSufix}`;  
+    }
+  }
+  return description;
 }
 
 async function fetchTransactions(itemIds) {
@@ -47,8 +58,10 @@ async function fetchTransactions(itemIds) {
             const classification = transaction.type === 'DEBIT' ? 'Saída' : 'Entrada';
             const date = formatDate(transaction.date);
             const amount = formatAmount(transaction);
-            const accountTypeFormatted = formatAccountType(accountType);
-            console.log(`${classification}, ${date},${transaction.description},  ${amount}, ${transaction.category},  ${account.owner}, ${bankName}, ${accountTypeFormatted}`);
+            const accountTypeFormatted = formatAccountType(accountType);            
+            const recurringTransaction = formatRecurringTransaction(transaction);
+            const descriptionFormatted = formatDescription(transaction, recurringTransaction);
+            console.log(`${classification}, ${date}, ${descriptionFormatted},  ${amount}, ${transaction.category},  ${account.owner}, ${bankName}, ${accountTypeFormatted}, ${recurringTransaction}`);
           });
         }
       }
