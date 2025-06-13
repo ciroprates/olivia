@@ -69,7 +69,7 @@ class TransactionService {
   }
 
   _formatTransactions(transactions) {
-    const header = '"Classificação", "Data", "Descrição", "Valor", "Categoria", "Dono", "Banco", "Conta", "Recorrente?"\n';
+    const header = '"Classificação", "Data", "Descrição", "Valor", "Categoria", "Dono", "Pagador", "Banco", "Conta", "Recorrente?"\n';
     const rows = transactions.map(({ transaction, account, bankName, accountType }) => {
       const classification = transaction.type === 'DEBIT' ? 'Saída' : 'Entrada';
       const date = formatDate(transaction.date);
@@ -79,8 +79,9 @@ class TransactionService {
       const descriptionFormatted = formatDescription(transaction, recurringTransaction);
       const categoryFormatted = transaction.category || '';
       const ownerFormatted = formatOwner(account.owner);
+      const payerName = transaction.paymentData?.payer?.name || '';
       
-      return `"${classification}", "${date}", "${descriptionFormatted}", "${amount}", "${categoryFormatted}", "${ownerFormatted}", "${bankName}", "${accountTypeFormatted}", "${recurringTransaction}"`;
+      return `"${classification}", "${date}", "${descriptionFormatted}", "${amount}", "${categoryFormatted}", "${ownerFormatted}", "${payerName}", "${bankName}", "${accountTypeFormatted}", "${recurringTransaction}"`;
     });
 
     return header + rows.join('\n');
