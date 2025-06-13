@@ -76,7 +76,7 @@ class TransactionService {
       const amount = formatAmount(transaction);
       const accountTypeFormatted = formatAccountType(accountType);
       const recurringTransaction = formatRecurringTransaction(transaction);
-      const descriptionFormatted = formatDescription(transaction, recurringTransaction);
+      const descriptionFormatted = formatDescription(transaction);
       const categoryFormatted = transaction.category || '';
       const ownerFormatted = formatOwner(account.owner);
       

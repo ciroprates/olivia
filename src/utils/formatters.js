@@ -15,14 +15,32 @@ function formatAccountType(accountType) {
   return accountType === 'BANK' ? 'Conta Corrente' : 'Cartão de Crédito';
 }
 
-function formatRecurringTransaction(transaction) {
-  const totalInstallments = transaction.creditCardMetadata && transaction.creditCardMetadata.totalInstallments;
-  return totalInstallments > 1 ? 'Sim' : 'Não';
+function _isRecurringTransaction(transaction) {
+  return transaction.creditCardMetadata && transaction.creditCardMetadata.totalInstallments > 1;
 }
 
-function formatDescription(transaction, recurringTransaction) {
-  const payerName = (transaction.paymentData && transaction.paymentData.payer && transaction.paymentData.payer.name) || '';
-  return `${transaction.description}${recurringTransaction ? ` (${recurringTransaction})` : ''}${payerName ? ` - ${payerName}` : ''}`;
+function formatRecurringTransaction(transaction) {
+  return _isRecurringTransaction(transaction) ? 'Sim' : 'Não';
+}
+
+function formatDescription(transaction) {
+  let description = transaction.description;
+  
+  // Adiciona informação de parcelas para transações recorrentes
+  if (_isRecurringTransaction(transaction)) {
+    const installmentSufix = `${transaction.creditCardMetadata.installmentNumber}/${transaction.creditCardMetadata.totalInstallments}`;
+    if (!description.includes(installmentSufix)) {
+      description = `${description} - ${installmentSufix}`;  
+    }
+  }
+
+  // Adiciona nome do pagador se existir
+  const payerName = transaction.paymentData && transaction.paymentData.payer && transaction.paymentData.payer.name;
+  if (payerName) {
+    description = `${description} - ${payerName}`;
+  }
+
+  return description;
 }
 
 function formatOwner(owner) { 
