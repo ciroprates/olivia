@@ -32,11 +32,21 @@ function formatDescription(transaction, recurringTransaction) {
 }
 
 
+function formatOwner(owner) { 
+  
+  const names = owner.trim().split(/\s+/);
+  if (names.length <= 1) return owner;
+  
+  return `${names[0]} ${names[names.length - 1]}`;
+}
+
+
 
 module.exports = {
   formatAmount,
   formatDate,
   formatAccountType,
   formatRecurringTransaction,
-  formatDescription
+  formatDescription,
+  formatOwner
 }; 

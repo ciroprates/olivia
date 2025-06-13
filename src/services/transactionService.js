@@ -6,7 +6,8 @@ const {
   formatDate,
   formatAccountType,
   formatRecurringTransaction,
-  formatDescription
+  formatDescription,
+  formatOwner
 } = require('../utils/formatters');
 
 class TransactionService {
@@ -77,8 +78,9 @@ class TransactionService {
       const recurringTransaction = formatRecurringTransaction(transaction);
       const descriptionFormatted = formatDescription(transaction, recurringTransaction);
       const categoryFormatted = transaction.category || '';
+      const ownerFormatted = formatOwner(account.owner);
       
-      return `"${classification}", "${date}", "${descriptionFormatted}", "${amount}", "${categoryFormatted}", "${account.owner}", "${bankName}", "${accountTypeFormatted}", "${recurringTransaction}"`;
+      return `"${classification}", "${date}", "${descriptionFormatted}", "${amount}", "${categoryFormatted}", "${ownerFormatted}", "${bankName}", "${accountTypeFormatted}", "${recurringTransaction}"`;
     });
 
     return header + rows.join('\n');

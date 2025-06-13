@@ -19,7 +19,10 @@
   "author": "Ciro Prates",
   "license": "MIT",
   "dependencies": {
+    "@google-cloud/local-auth": "^1.0.0",
+    "csv-parse": "^4.16.3",
     "dotenv": "^16.3.1",
-    "pluggy-sdk": "^1.0.0"
+    "googleapis": "^92.0.0",
+    "pluggy-sdk": "0.72.0"
   }
 }

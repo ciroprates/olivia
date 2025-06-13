@@ -20,15 +20,19 @@ async function main() {
     ]
   };
   
-  // Fetch and display transactions
-  await transactionService.fetchTransactions(itemIds, options);
+  try {
+    // Fetch and display transactions
+    await transactionService.fetchTransactions(itemIds, options);
 
-  // Get unique categories
-  /*
-  const uniqueCategories = await transactionService.getUniqueCategories(itemIds);
-  console.log('\nUnique Categories:');
-  console.log(uniqueCategories.join('\n'));
-  */
+    // Get unique categories
+    /*
+    const uniqueCategories = await transactionService.getUniqueCategories(itemIds);
+    console.log('\nUnique Categories:');
+    console.log(uniqueCategories.join('\n'));
+    */
+  } catch (error) {
+    console.error('Erro:', error.message);
+  }
 }
 
 // Run the application
