@@ -1,0 +1,51 @@
+{
+    "Gastos Pessoais (cabeleireiro, barbeiro)": [
+      "Shopping"
+    ],
+    "Assinaturas": [
+      "Digital services",
+      "Video streaming"
+    ],
+    "Vestuário": [
+      "Clothing"
+    ],
+    "Carro (combustível, manutenção, multa, seguro, limpeza)": [
+      "Vehicle insurance"
+    ],
+    "Mercado": [
+      "Groceries"
+    ],
+    "Restaurante": [
+      "Food delivery",
+      "Eating out",
+      "Food and drinks",
+      "Food delivery"
+    ],
+    "Estacionamento / Pedágio": [
+      "Tolls and in vehicle payment",
+      "Parking"
+    ],
+    "Saúde (igreja, crossfit, exames, clínicas, farmácia)": [
+      "Pharmacy",
+      "Gyms and fitness centers",
+      "Healthcare"
+    ],
+    "Despesas Extras": [
+      "Tax on financial operations",
+      "Sports goods",
+      "Shopping"
+    ],
+    "Lazer (clube, passeios)": [
+      "Leisure"
+    ],
+    "Manutenção Casa": [
+      "Office supplies"
+    ],
+    "Uber / Taxi": [
+      "Taxi and ride-hailing"
+    ],
+    "Produtos de Limpeza e Higiene": [
+      "Bookstore"
+    ]
+  }
+  

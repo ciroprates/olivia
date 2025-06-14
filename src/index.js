@@ -22,7 +22,8 @@ async function main() {
   
   try {
     // Fetch and display transactions
-    await transactionService.fetchTransactions(itemIds, options);
+    //await transactionService.fetchTransactions(itemIds, options);
+    await transactionService.fetchTransactions(itemIds);
 
     // Get unique categories
     /*

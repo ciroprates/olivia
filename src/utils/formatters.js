@@ -1,3 +1,5 @@
+const categories = require('../categories.json');
+
 function formatAmount(transaction) {
   const amount = transaction.amountInAccountCurrency !== null && transaction.amountInAccountCurrency !== undefined 
     ? transaction.amountInAccountCurrency 
@@ -43,11 +45,21 @@ function formatDescription(transaction) {
   return description;
 }
 
-function formatOwner(owner) { 
+function formatCategory(category) {
+  if (!category) return '';
   
-  const names = owner.trim().split(/\s+/);
-  if (names.length <= 1) return owner;
+  // Procura a categoria no mapeamento
+  for (const [mappedCategory, values] of Object.entries(categories)) {
+    if (values.includes(category)) {
+      return mappedCategory;
+    }
+  }
   
+  return category;
+}
+
+function formatOwner(owner) {
+  const names = owner.split(' ');
   return `${names[0]} ${names[names.length - 1]}`;
 }
 
@@ -57,5 +69,6 @@ module.exports = {
   formatAccountType,
   formatRecurringTransaction,
   formatDescription,
-  formatOwner
+  formatOwner,
+  formatCategory
 }; 
