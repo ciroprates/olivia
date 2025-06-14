@@ -9,22 +9,18 @@ const transactionService = new TransactionService(
 
 async function main() {
   const options = {
-    includeCategories: [      
-      'Services',
-      'Education',
-      'Transfers'
+    includeCategories: [           
     ],
     excludeCategories: [
-     'Investments',
-     'Same person transfer'
+     'Same person transfer',
+     'Credit card payment'
     ]
   };
   
   try {
     // Fetch and display transactions
-    //await transactionService.fetchTransactions(itemIds, options);
-    await transactionService.fetchTransactions(itemIds);
-
+    await transactionService.fetchTransactions(itemIds, options);
+    
     // Get unique categories
     /*
     const uniqueCategories = await transactionService.getUniqueCategories(itemIds);

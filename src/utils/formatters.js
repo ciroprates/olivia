@@ -65,7 +65,14 @@ function formatCategory(category) {
 
 function formatOwner(owner) {
   const names = owner.split(' ');
-  return `${names[0]} ${names[names.length - 1]}`;
+  const formatName = (name) => {
+    if (name === name.toUpperCase()) {
+      return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+    }
+    return name;
+  };
+  
+  return `${formatName(names[0])} ${formatName(names[names.length - 1])}`;
 }
 
 module.exports = {

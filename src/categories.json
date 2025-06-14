@@ -1,6 +1,14 @@
 {
     "Gastos Pessoais (cabeleireiro, barbeiro)": [
-      "Shopping"
+      
+    ],
+    "Salário Ciro": [
+      "Salary"
+    ],
+    "Contas da Casa (luz, gás, net, celular)": [
+      "Electricity",
+      "Gas",      
+      "Telecommunications"
     ],
     "Assinaturas": [
       "Digital services",
@@ -10,10 +18,12 @@
       "Clothing"
     ],
     "Carro (combustível, manutenção, multa, seguro, limpeza)": [
-      "Vehicle insurance"
+      "Vehicle insurance",
+      "Gas stations"      
     ],
     "Mercado": [
-      "Groceries"
+      "Groceries",
+      "Shopping"
     ],
     "Restaurante": [
       "Food delivery",
@@ -24,6 +34,7 @@
     "Estacionamento / Pedágio": [
       "Tolls and in vehicle payment",
       "Parking"
+      
     ],
     "Saúde (igreja, crossfit, exames, clínicas, farmácia)": [
       "Pharmacy",
@@ -33,10 +44,12 @@
     "Despesas Extras": [
       "Tax on financial operations",
       "Sports goods",
-      "Shopping"
+      "Shopping",
+      "Electronics"
     ],
     "Lazer (clube, passeios)": [
-      "Leisure"
+      "Leisure",
+      "Wellness and fitness"
     ],
     "Manutenção Casa": [
       "Office supplies"
