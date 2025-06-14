@@ -8,8 +8,10 @@ const {
   formatRecurringTransaction,
   formatDescription,
   formatOwner,
-  formatCategory
+  formatCategory,
+  formatClassification
 } = require('../utils/formatters');
+const { CSV_HEADER } = require('../constants');
 
 class TransactionService {
   constructor(clientId, clientSecret) {
@@ -70,9 +72,9 @@ class TransactionService {
   }
 
   _formatTransactions(transactions) {
-    const header = '"Classificação", "Data", "Descrição", "Valor", "Categoria", "Dono", "Banco", "Conta", "Recorrente?"\n';
+    const header = CSV_HEADER + '\n';
     const rows = transactions.map(({ transaction, account, bankName, accountType }) => {
-      const classification = transaction.type === 'DEBIT' ? 'Saída' : 'Entrada';
+      const classification = formatClassification(transaction.type);
       const date = formatDate(transaction.date);
       const amount = formatAmount(transaction);
       const accountTypeFormatted = formatAccountType(accountType);

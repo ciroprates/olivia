@@ -1,4 +1,10 @@
 const categories = require('../categories.json');
+const { ACCOUNT_TYPE_LABELS, RECURRING_LABELS, TRANSACTION_TYPES, CLASSIFICATIONS } = require('../constants');
+
+function formatDate(date) {
+  const d = new Date(date);
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+}
 
 function formatAmount(transaction) {
   const amount = transaction.amountInAccountCurrency !== null && transaction.amountInAccountCurrency !== undefined 
@@ -8,13 +14,12 @@ function formatAmount(transaction) {
   return Math.abs(amount).toFixed(2);
 }
 
-function formatDate(date) {
-  const d = new Date(date);
-  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+function formatAccountType(accountType) {
+  return ACCOUNT_TYPE_LABELS[accountType];
 }
 
-function formatAccountType(accountType) {
-  return accountType === 'BANK' ? 'Conta Corrente' : 'Cartão de Crédito';
+function formatClassification(transactionType) {
+  return transactionType === TRANSACTION_TYPES.DEBIT ? CLASSIFICATIONS.SAIDA : CLASSIFICATIONS.ENTRADA;
 }
 
 function _isRecurringTransaction(transaction) {
@@ -22,7 +27,7 @@ function _isRecurringTransaction(transaction) {
 }
 
 function formatRecurringTransaction(transaction) {
-  return _isRecurringTransaction(transaction) ? 'Sim' : 'Não';
+  return _isRecurringTransaction(transaction) ? RECURRING_LABELS.SIM : RECURRING_LABELS.NAO;
 }
 
 function formatDescription(transaction) {
@@ -64,11 +69,12 @@ function formatOwner(owner) {
 }
 
 module.exports = {
-  formatAmount,
   formatDate,
+  formatAmount,
   formatAccountType,
   formatRecurringTransaction,
   formatDescription,
   formatOwner,
-  formatCategory
+  formatCategory,
+  formatClassification
 }; 
