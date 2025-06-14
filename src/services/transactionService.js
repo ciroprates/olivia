@@ -22,7 +22,7 @@ class TransactionService {
   }
 
   async _fetchTransactionsData(itemIds, options = {}) {
-    const { includeCategories = null, excludeCategories = null } = options;
+    const { excludeCategories = null } = options;
     const allTransactions = [];
     const startDate = '2025-04-01';
     const pageSize = 100; // Tamanho máximo de página da API
@@ -48,10 +48,9 @@ class TransactionService {
             
             transactions.results.forEach(transaction => {
               const category = transaction.category;
-              const shouldInclude = !includeCategories || (category && includeCategories.includes(category));
               const shouldExclude = excludeCategories && category && excludeCategories.includes(category);
               
-              if (shouldInclude && !shouldExclude) {
+              if (!shouldExclude) {
                 allTransactions.push({
                   transaction,
                   account,

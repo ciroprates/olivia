@@ -6,8 +6,14 @@ A Node.js application that fetches and displays financial transactions from mult
 
 - Fetches transactions from multiple banking institutions
 - Supports both bank accounts and credit cards
-- Displays transactions with date, amount, description, account type, bank name, and account owner
+- Exports transactions to CSV format
+- Filters transactions by category
+- Formats dates as YYYY/MM/DD
 - Formats currency values in Brazilian Real (BRL)
+- Formats owner names with proper case
+- Maps categories to standardized names
+- Identifies recurring transactions
+- Shows transaction classification (Income/Expense)
 
 ## Setup
 
