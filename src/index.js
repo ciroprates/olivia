@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { itemIds } = require('./config');
 const TransactionService = require('./services/transactionService');
+const { generateCSV } = require('./utils/csvUtils');
 
 const transactionService = new TransactionService(
   process.env.PLUGGY_CLIENT_ID,
@@ -18,8 +19,10 @@ async function main() {
   
   try {
     // Fetch and display transactions
-    await transactionService.fetchTransactions(itemIds, options);
-  
+    const transactions = await transactionService.fetchTransactions(itemIds, options);
+    const content = await transactionService.formatTransactions(transactions);
+    const filePath = generateCSV(content);
+    console.log(`\nArquivo CSV gerado: ${filePath}`);
   } catch (error) {
     console.error('Erro:', error.message);
   }

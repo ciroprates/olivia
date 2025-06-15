@@ -11,7 +11,7 @@ const {
   formatCategory,
   formatClassification
 } = require('../utils/formatters');
-const { CSV_HEADER } = require('../constants');
+const { CSV_HEADER, ACCOUNT_TYPES } = require('../constants');
 
 class TransactionService {
   constructor(clientId, clientSecret) {
@@ -21,55 +21,36 @@ class TransactionService {
     });
   }
 
-  async _fetchTransactionsData(itemIds, options = {}) {
-    const { excludeCategories = null, startDate = '2025-02-20' } = options;
-    const allTransactions = [];
-    const pageSize = 100; // Tamanho máximo de página da API
-    
-    for (const itemId of itemIds) {
-      const item = await this.client.fetchItem(itemId);
-      const bankName = item.connector.name;
-      const accountTypes = ['BANK', 'CREDIT'];
+  getFirstDayOfPreviousMonth() {
+    const date = new Date();
+    date.setMonth(date.getMonth() - 1);
+    date.setDate(1);
+    return date.toISOString().split('T')[0];
+  }
+
+  async fetchAccounts (itemId) {
+    const item = await this.client.fetchItem(itemId);
+    const bankName = item.connector.name;
+    const accountTypes = [ACCOUNT_TYPES.BANK, ACCOUNT_TYPES.CREDIT];
+    const accounts = [];
+
+    for (const accountType of accountTypes) {
+      const accountsResponse = await this.client.fetchAccounts(itemId, accountType);
       
-      for (const accountType of accountTypes) {
-        const accountsResponse = await this.client.fetchAccounts(itemId, accountType);
-        
-        for (const account of accountsResponse.results) {
-          let page = 1;
-          let hasMore = true;
-          
-          while (hasMore) {
-            const transactions = await this.client.fetchTransactions(account.id, {
-              from: startDate,
-              page,
-              pageSize
-            });
-            
-            transactions.results.forEach(transaction => {
-              const category = transaction.category;
-              const shouldExclude = excludeCategories && category && excludeCategories.includes(category);
-              
-              if (!shouldExclude) {
-                allTransactions.push({
-                  transaction,
-                  account,
-                  bankName,
-                  accountType
-                });
-              }
-            });
-            
-            hasMore = transactions.page < transactions.totalPages;
-            page++;
-          }
-        }
+      for (const account of accountsResponse.results) {
+        // Cria lista de contas
+        accounts.push({
+          account,
+          bankName,
+          accountType
+        });
       }
     }
     
-    return allTransactions;
+    return accounts;
   }
-
-  _formatTransactions(transactions) {
+  
+  async formatTransactions(transactions) {
     const header = CSV_HEADER + '\n';
     const rows = transactions.map(({ transaction, account, bankName, accountType }) => {
       const classification = formatClassification(transaction.type);
@@ -87,31 +68,50 @@ class TransactionService {
     return header + rows.join('\n');
   }
 
-  _generateCSV(content) {
-    // Cria o diretório de saída se não existir
-    const outputDir = path.join(process.cwd(), 'output');
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir);
-    }
-
-    // Gera nome do arquivo com data e hora
-    const now = new Date();
-    const fileName = `transactions_${now.toISOString().slice(0,19).replace(/[:]/g, '-')}.csv`;
-    const filePath = path.join(outputDir, fileName);
-
-    // Prepara e escreve o conteúdo do CSV
-    
-    fs.writeFileSync(filePath, content);
-    
-    return filePath;
-  }
+  
 
   async fetchTransactions(itemIds, options = {}) {
     try {
-      const allTransactions = await this._fetchTransactionsData(itemIds, options);
-      const content = this._formatTransactions(allTransactions);
-      const filePath = this._generateCSV(content);
-      console.log(`\nArquivo CSV gerado: ${filePath}`);
+      const { excludeCategories = null, startDate = this.getFirstDayOfPreviousMonth() } = options;
+      const allTransactions = [];
+      const pageSize = 100; // Tamanho máximo de página da API
+      
+      for (const itemId of itemIds) {
+        const accounts = await this.fetchAccounts(itemId);
+          
+        for (const account of accounts) {
+          let page = 1;
+          let hasMore = true;
+          
+          while (hasMore) {
+            const transactions = await this.client.fetchTransactions(account.account.id, {
+              from: startDate,
+              page,
+              pageSize
+            });
+            
+            transactions.results.forEach(transaction => {
+              const category = transaction.category;
+              const shouldExclude = excludeCategories && category && excludeCategories.includes(category);
+              
+              if (!shouldExclude) {
+                allTransactions.push({
+                  transaction,
+                  account: account.account,
+                  bankName: account.bankName,
+                  accountType: account.accountType
+                });
+              }
+            });
+            
+            hasMore = transactions.page < transactions.totalPages;
+            page++;
+          }
+        }      
+      }
+      
+      return allTransactions;
+      
     } catch (error) {
       console.error('Error:', error.message);
     }
