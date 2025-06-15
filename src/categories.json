@@ -1,9 +1,12 @@
 {
     "Gastos Pessoais (cabeleireiro, barbeiro)": [
-      
+      "Services"      
     ],
     "Salário Ciro": [
       "Salary"
+    ],
+    "Empréstimo": [
+      "Investments"
     ],
     "Contas da Casa (luz, gás, net, celular)": [
       "Electricity",
@@ -12,14 +15,16 @@
     ],
     "Assinaturas": [
       "Digital services",
-      "Video streaming"
+      "Video streaming",
+      "Internet"
     ],
     "Vestuário": [
       "Clothing"
     ],
     "Carro (combustível, manutenção, multa, seguro, limpeza)": [
       "Vehicle insurance",
-      "Gas stations"      
+      "Gas stations",
+      "Insurance"
     ],
     "Mercado": [
       "Groceries",
@@ -33,8 +38,7 @@
     ],
     "Estacionamento / Pedágio": [
       "Tolls and in vehicle payment",
-      "Parking"
-      
+      "Parking"      
     ],
     "Saúde (igreja, crossfit, exames, clínicas, farmácia)": [
       "Pharmacy",
@@ -52,7 +56,8 @@
       "Wellness and fitness"
     ],
     "Manutenção Casa": [
-      "Office supplies"
+      "Office supplies",
+      "Houseware"
     ],
     "Uber / Taxi": [
       "Taxi and ride-hailing"

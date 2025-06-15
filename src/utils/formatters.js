@@ -72,7 +72,7 @@ function formatOwner(owner) {
     return name;
   };
   
-  return `${formatName(names[0])} ${formatName(names[names.length - 1])}`;
+  return `${formatName(names[0])}`;
 }
 
 module.exports = {

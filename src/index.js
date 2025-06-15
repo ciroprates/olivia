@@ -13,7 +13,7 @@ async function main() {
      'Same person transfer',
      'Credit card payment'
     ],
-    startDate: '2025-02-20'
+    startDate: '2025-06-13'
   };
   
   try {
