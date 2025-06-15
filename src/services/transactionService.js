@@ -29,8 +29,20 @@ class TransactionService {
   }
 
   async fetchAccounts (itemId) {
-    const item = await this.client.fetchItem(itemId);
+    const item = await this.client.fetchItem(itemId);    
+    
     const bankName = item.connector.name;
+
+    // Caso última atualização seja anterior a 1 dia, atualiza o item
+    const oneDayInMs = 24 * 60 * 60 * 1000;
+    if (item.updatedAt && (Date.now() - item.updatedAt) > oneDayInMs) { 
+      
+      this.client.updateItem(itemId)
+      
+      console.log(`Item ${itemId} - ${bankName} atualizado.`);
+    }
+
+    
     const accountTypes = [ACCOUNT_TYPES.BANK, ACCOUNT_TYPES.CREDIT];
     const accounts = [];
 

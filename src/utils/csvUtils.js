@@ -1,22 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-function getLastCsvDate() {
-  const csvPath = path.join(__dirname, '..', 'transactions.csv');
-  if (fs.existsSync(csvPath)) {
-    const stats = fs.statSync(csvPath);
-    return new Date(stats.mtime);
-  }
-  return null;
-}
-
-function shouldUpdateItem(lastCsvDate) {
-  if (!lastCsvDate) return true;
-  
-  const currentDate = new Date();
-  const oneDayInMs = 24 * 60 * 60 * 1000;
-  return (currentDate - lastCsvDate) > oneDayInMs;
-}
 
 function generateCSV(content) {
   // Cria o diretório de saída se não existir
@@ -37,8 +21,6 @@ function generateCSV(content) {
   return filePath;
 }
 
-module.exports = {
-  getLastCsvDate,
-  shouldUpdateItem,
+module.exports = {  
   generateCSV
 }; 
