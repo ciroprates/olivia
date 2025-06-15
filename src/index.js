@@ -12,20 +12,14 @@ async function main() {
     excludeCategories: [
      'Same person transfer',
      'Credit card payment'
-    ]
+    ],
+    startDate: '2025-02-20'
   };
   
   try {
     // Fetch and display transactions
     await transactionService.fetchTransactions(itemIds, options);
   
-    
-    // Get unique categories
-    /*
-    const uniqueCategories = await transactionService.getUniqueCategories(itemIds);
-    console.log('\nUnique Categories:');
-    console.log(uniqueCategories.join('\n'));
-    */
   } catch (error) {
     console.error('Erro:', error.message);
   }

@@ -22,9 +22,8 @@ class TransactionService {
   }
 
   async _fetchTransactionsData(itemIds, options = {}) {
-    const { excludeCategories = null } = options;
+    const { excludeCategories = null, startDate = '2025-02-20' } = options;
     const allTransactions = [];
-    const startDate = '2025-04-01';
     const pageSize = 100; // Tamanho máximo de página da API
     
     for (const itemId of itemIds) {
@@ -118,23 +117,6 @@ class TransactionService {
     }
   }
 
-  async getUniqueCategories(itemIds) {
-    try {
-      const allTransactions = await this._fetchTransactionsData(itemIds);
-      const categories = new Set();
-      
-      allTransactions.forEach(({ transaction }) => {
-        if (transaction.category) {
-          categories.add(transaction.category);
-        }
-      });
-      
-      return Array.from(categories).sort();
-    } catch (error) {
-      console.error('Error getting unique categories:', error.message);
-      return [];
-    }
-  }
 }
 
 module.exports = TransactionService; 
