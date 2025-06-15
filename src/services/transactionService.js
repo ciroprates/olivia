@@ -1,17 +1,5 @@
 const { PluggyClient } = require('pluggy-sdk');
-const fs = require('fs');
-const path = require('path');
-const {
-  formatAmount,
-  formatDate,
-  formatAccountType,
-  formatRecurringTransaction,
-  formatDescription,
-  formatOwner,
-  formatCategory,
-  formatClassification
-} = require('../utils/formatters');
-const { CSV_HEADER, ACCOUNT_TYPES } = require('../constants');
+const { ACCOUNT_TYPES } = require('../constants');
 
 class TransactionService {
   constructor(clientId, clientSecret) {
@@ -27,59 +15,6 @@ class TransactionService {
     date.setDate(1);
     return date.toISOString().split('T')[0];
   }
-
-  async fetchAccounts (itemId) {
-    const item = await this.client.fetchItem(itemId);    
-    
-    const bankName = item.connector.name;
-
-    // Caso última atualização seja anterior a 1 dia, atualiza o item
-    const oneDayInMs = 24 * 60 * 60 * 1000;
-    if (item.updatedAt && (Date.now() - item.updatedAt) > oneDayInMs) { 
-      
-      this.client.updateItem(itemId)
-      
-      console.log(`Item ${itemId} - ${bankName} atualizado.`);
-    }
-
-    
-    const accountTypes = [ACCOUNT_TYPES.BANK, ACCOUNT_TYPES.CREDIT];
-    const accounts = [];
-
-    for (const accountType of accountTypes) {
-      const accountsResponse = await this.client.fetchAccounts(itemId, accountType);
-      
-      for (const account of accountsResponse.results) {
-        // Cria lista de contas
-        accounts.push({
-          account,
-          bankName,
-          accountType
-        });
-      }
-    }
-    
-    return accounts;
-  }
-  
-  async formatTransactions(transactions) {
-    const header = CSV_HEADER + '\n';
-    const rows = transactions.map(({ transaction, account, bankName, accountType }) => {
-      const classification = formatClassification(transaction.type);
-      const date = formatDate(transaction.date);
-      const amount = formatAmount(transaction);
-      const accountTypeFormatted = formatAccountType(accountType);
-      const recurringTransaction = formatRecurringTransaction(transaction);
-      const descriptionFormatted = formatDescription(transaction);
-      const categoryFormatted = formatCategory(transaction.category);
-      const ownerFormatted = formatOwner(account.owner);
-      
-      return `"${classification}", "${date}", "${descriptionFormatted}", "${amount}", "${categoryFormatted}", "${ownerFormatted}", "${bankName}", "${accountTypeFormatted}", "${recurringTransaction}"`;
-    });
-
-    return header + rows.join('\n');
-  }
-
   
 
   async fetchTransactions(itemIds, options = {}) {
@@ -89,35 +24,51 @@ class TransactionService {
       const pageSize = 100; // Tamanho máximo de página da API
       
       for (const itemId of itemIds) {
-        const accounts = await this.fetchAccounts(itemId);
+        const item = await this.client.fetchItem(itemId);
+        const bankName = item.connector.name;
+
+        console.log(`Recuperado item=[${itemId} - ${bankName}]. Status: ${item.status}.`);
+
+        // Caso última atualização seja anterior a 1 dia, atualiza o item
+        const oneDayInMs = 24 * 60 * 60 * 1000;
+        if (item.updatedAt && (Date.now() - item.updatedAt) > oneDayInMs) { 
+          await this.client.updateItem(itemId);
+          console.log(`Atualização do item=[${itemId} - ${bankName}] solicitada. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
+        }
+
+        const accountTypes = [ACCOUNT_TYPES.BANK, ACCOUNT_TYPES.CREDIT];
+        
+        for (const accountType of accountTypes) {
+          const accountsResponse = await this.client.fetchAccounts(itemId, accountType);
           
-        for (const account of accounts) {
-          let page = 1;
-          let hasMore = true;
-          
-          while (hasMore) {
-            const transactions = await this.client.fetchTransactions(account.account.id, {
-              from: startDate,
-              page,
-              pageSize
-            });
+          for (const account of accountsResponse.results) {
+            let page = 1;
+            let hasMore = true;
             
-            transactions.results.forEach(transaction => {
-              const category = transaction.category;
-              const shouldExclude = excludeCategories && category && excludeCategories.includes(category);
+            while (hasMore) {
+              const transactions = await this.client.fetchTransactions(account.id, {
+                from: startDate,
+                page,
+                pageSize
+              });
               
-              if (!shouldExclude) {
-                allTransactions.push({
-                  transaction,
-                  account: account.account,
-                  bankName: account.bankName,
-                  accountType: account.accountType
-                });
-              }
-            });
-            
-            hasMore = transactions.page < transactions.totalPages;
-            page++;
+              transactions.results.forEach(transaction => {
+                const category = transaction.category;
+                const shouldExclude = excludeCategories && category && excludeCategories.includes(category);
+                
+                if (!shouldExclude) {
+                  allTransactions.push({
+                    transaction,
+                    account,
+                    bankName,
+                    accountType
+                  });
+                }
+              });
+              
+              hasMore = transactions.page < transactions.totalPages;
+              page++;
+            }
           }
         }      
       }
@@ -128,7 +79,6 @@ class TransactionService {
       console.error('Error:', error.message);
     }
   }
-
 }
 
 module.exports = TransactionService; 
