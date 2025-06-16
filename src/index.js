@@ -20,8 +20,7 @@ async function main() {
   try {
     // Fetch and display transactions
     const transactions = await transactionService.fetchTransactions(itemIds, options);    
-    const filePath = generateCSV(transactions);
-    console.log(`\nArquivo CSV gerado: ${filePath}`);
+    generateCSV(transactions);    
   } catch (error) {
     console.error('Erro:', error.message);
   }

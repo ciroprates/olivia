@@ -27,7 +27,7 @@ class TransactionService {
         const item = await this.client.fetchItem(itemId);
         const bankName = item.connector.name;
 
-        console.log(`Recuperado item=[${itemId} - ${bankName}]. Status: ${item.status}.`);
+        console.log(`Recuperado item=[${itemId} - ${bankName}]. Status: ${item.status}. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
 
         // Caso última atualização seja anterior a 1 dia, atualiza o item
         const oneDayInMs = 24 * 60 * 60 * 1000;
