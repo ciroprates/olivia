@@ -13,8 +13,7 @@ async function main() {
     excludeCategories: [
      'Same person transfer',
      'Credit card payment'
-    ],
-    startDate: '2025-06-13'
+    ]
   };
   
   try {

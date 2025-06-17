@@ -1,5 +1,10 @@
 const { PluggyClient } = require('pluggy-sdk');
 const { ACCOUNT_TYPES } = require('../constants');
+const { determineStartDate } = require('../utils/csvUtils');
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 class TransactionService {
   constructor(clientId, clientSecret) {
@@ -9,22 +14,18 @@ class TransactionService {
     });
   }
 
-  getFirstDayOfPreviousMonth() {
-    const date = new Date();
-    date.setMonth(date.getMonth() - 1);
-    date.setDate(1);
-    return date.toISOString().split('T')[0];
-  }
-  
+
 
   async fetchTransactions(itemIds, options = {}) {
     try {
-      const { excludeCategories = null, startDate = this.getFirstDayOfPreviousMonth() } = options;
+      const { excludeCategories = null, startDate = null } = options;
       const allTransactions = [];
       const pageSize = 100; // Tamanho máximo de página da API
+
+      const effectiveStartDate = determineStartDate(startDate);
       
       for (const itemId of itemIds) {
-        const item = await this.client.fetchItem(itemId);
+        let item = await this.client.fetchItem(itemId);
         const bankName = item.connector.name;
 
         console.log(`Recuperado item=[${itemId} - ${bankName}]. Status: ${item.status}. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
@@ -33,7 +34,17 @@ class TransactionService {
         const oneDayInMs = 24 * 60 * 60 * 1000;
         if (item.updatedAt && (Date.now() - item.updatedAt) > oneDayInMs) { 
           await this.client.updateItem(itemId);
-          console.log(`Atualização do item=[${itemId} - ${bankName}] solicitada. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
+
+          while (item.status === 'UPDATING') {
+            // wait a few seconds before next request (to prevent 429 error response)
+            await sleep(2000)
+
+            // retrieve item status
+            item = await this.client.fetchItem(item.id)
+            console.log(`Item [${itemId} - ${bankName}] status: ${item.status}, status da execução: ${item.executionStatus}`)
+          }
+            
+          console.log(`Atualização do item=[${itemId} - ${bankName}] realizada. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
         }
 
         const accountTypes = [ACCOUNT_TYPES.BANK, ACCOUNT_TYPES.CREDIT];
@@ -47,7 +58,7 @@ class TransactionService {
             
             while (hasMore) {
               const transactions = await this.client.fetchTransactions(account.id, {
-                from: startDate,
+                from: effectiveStartDate,
                 page,
                 pageSize
               });
@@ -68,15 +79,17 @@ class TransactionService {
               
               hasMore = transactions.page < transactions.totalPages;
               page++;
-            }
+            }            
           }
         }      
       }
-      
+      console.log(`Recuperadas ${allTransactions.length} transações a partir da data ${effectiveStartDate}.`);
+
       return allTransactions;
       
     } catch (error) {
       console.error('Error:', error.message);
+      return [];
     }
   }
 }
