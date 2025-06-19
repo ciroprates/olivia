@@ -126,10 +126,7 @@ function generateCSV(transactions) {
   // Se não houver novas transações, retorna o caminho do último arquivo
   if (newTransactions.length === 0) {
     console.log('Nenhuma nova transação encontrada.');
-    return path.join(outputDir, fs.readdirSync(outputDir)
-      .filter(file => file.startsWith('transactions_'))
-      .sort()
-      .reverse()[0]);
+    return null;
   }
 
   // Prepara e escreve o conteúdo do CSV

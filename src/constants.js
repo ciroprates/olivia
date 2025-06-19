@@ -25,11 +25,14 @@ const RECURRING_LABELS = {
 
 const CSV_HEADER = '"Classificação", "Data", "Descrição", "Valor", "Categoria", "Dono", "Banco", "Conta", "Recorrente?"';
 
+const BUCKET_NAME = 'olivia-transactions';
+
 module.exports = {
   TRANSACTION_TYPES,
   CLASSIFICATIONS,
   ACCOUNT_TYPES,
   ACCOUNT_TYPE_LABELS,
   RECURRING_LABELS,
-  CSV_HEADER
+  CSV_HEADER,
+  BUCKET_NAME
 }; 
