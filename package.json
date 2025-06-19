@@ -19,6 +19,7 @@
   "author": "Ciro Prates",
   "license": "MIT",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.830.0",
     "@google-cloud/local-auth": "^1.0.0",
     "csv-parse": "^4.16.3",
     "dotenv": "^16.3.1",
