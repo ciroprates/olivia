@@ -35,7 +35,7 @@ class TransactionService {
         if (item.updatedAt && (Date.now() - item.updatedAt) > oneDayInMs) { 
           await this.client.updateItem(itemId);
 
-          while (item.status === 'UPDATING') {
+          while (item.status === 'UPDATING' || item.updatedAt && (Date.now() - item.updatedAt) > oneDayInMs) {
             // wait a few seconds before next request (to prevent 429 error response)
             await sleep(2000)
 
