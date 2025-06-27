@@ -1,6 +1,6 @@
 require('dotenv').config();
 const path = require('path');
-const { itemIds } = require('./config');
+const { banks } = require('./config');
 const TransactionService = require('./services/transactionService');
 const { generateCSV } = require('./utils/csvUtils');
 const { uploadFile } = require('./utils/s3Utils');
@@ -21,7 +21,8 @@ async function main() {
   
   try {
     // Fetch and display transactions
-    const transactions = await transactionService.fetchTransactions(itemIds, options);    
+    console.log(JSON.stringify(banks));
+    const transactions = await transactionService.fetchTransactions(banks, options);    
     const csvPath = generateCSV(transactions);    
     if (csvPath) {
       const fileName = path.basename(csvPath);

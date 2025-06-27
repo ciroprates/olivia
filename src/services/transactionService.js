@@ -16,7 +16,7 @@ class TransactionService {
 
 
 
-  async fetchTransactions(itemIds, options = {}) {
+  async fetchTransactions(banks, options = {}) {
     try {
       const { excludeCategories = null, startDate = null } = options;
       const allTransactions = [];
@@ -24,33 +24,33 @@ class TransactionService {
 
       const effectiveStartDate = determineStartDate(startDate);
       
-      for (const itemId of itemIds) {
-        let item = await this.client.fetchItem(itemId);
-        const bankName = item.connector.name;
+      for (const bank of banks) {
+        let item = await this.client.fetchItem(bank.id);
+        const bankName = bank.name;
 
-        console.log(`Recuperado item=[${itemId} - ${bankName}]. Status: ${item.status}. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
+        console.log(`Recuperado item=[${bank.id} - ${bankName}]. Status: ${item.status}. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
 
         // Caso última atualização seja anterior a 1 dia, atualiza o item
         const oneDayInMs = 24 * 60 * 60 * 1000;
         if (item.updatedAt && (Date.now() - item.updatedAt) > oneDayInMs) { 
-          await this.client.updateItem(itemId);
+          await this.client.updateItem(bank.id);
 
           while (item.status === 'UPDATING' || item.updatedAt && (Date.now() - item.updatedAt) > oneDayInMs) {
             // wait a few seconds before next request (to prevent 429 error response)
             await sleep(2000)
 
             // retrieve item status
-            item = await this.client.fetchItem(item.id)
-            console.log(`Item [${itemId} - ${bankName}] status: ${item.status}, status da execução: ${item.executionStatus}`)
+            item = await this.client.fetchItem(bank.id)
+            console.log(`Item [${bank.id} - ${bankName}] status: ${item.status}, status da execução: ${item.executionStatus}`)
           }
             
-          console.log(`Atualização do item=[${itemId} - ${bankName}] realizada. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
+          console.log(`Atualização do item=[${bank.id} - ${bankName}] realizada. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
         }
 
         const accountTypes = [ACCOUNT_TYPES.BANK, ACCOUNT_TYPES.CREDIT];
         
         for (const accountType of accountTypes) {
-          const accountsResponse = await this.client.fetchAccounts(itemId, accountType);
+          const accountsResponse = await this.client.fetchAccounts(bank.id, accountType);
           
           for (const account of accountsResponse.results) {
             let page = 1;
