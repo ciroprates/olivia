@@ -7,13 +7,8 @@ A Node.js application that fetches and displays financial transactions from mult
 - Fetches transactions from multiple banking institutions
 - Supports both bank accounts and credit cards
 - Exports transactions to CSV format
-- Filters transactions by category
-- Formats dates as YYYY/MM/DD
-- Formats currency values in Brazilian Real (BRL)
-- Formats owner names with proper case
-- Maps categories to standardized names
-- Identifies recurring transactions
-- Shows transaction classification (Income/Expense)
+
+
 
 ## Setup
 
@@ -29,14 +24,20 @@ PLUGGY_CLIENT_ID=your_client_id
 PLUGGY_CLIENT_SECRET=your_client_secret
 ```
 
-4. Create a `config.js` file with your item IDs:
+4. Create a `config.js` file with your bank configurations:
 ```javascript
-const itemIds = [
-  'your-mercado-pago-item-id',  // Replace with your Mercado Pago item ID
-  'your-nubank-item-id'         // Replace with your Nubank item ID
+const banks = [
+  {
+    id: 'your-mercado-pago-item-id',  // Replace with your Mercado Pago item ID
+    name: 'Mercado Pago'
+  },
+  {
+    id: 'your-nubank-item-id',        // Replace with your Nubank item ID
+    name: 'Nubank'
+  }
 ];
 
-module.exports = { itemIds };
+module.exports = { banks };
 ```
 
 5. Run the application:
