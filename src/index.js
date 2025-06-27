@@ -21,7 +21,6 @@ async function main() {
   
   try {
     // Fetch and display transactions
-    console.log(JSON.stringify(banks));
     const transactions = await transactionService.fetchTransactions(banks, options);    
     const csvPath = generateCSV(transactions);    
     if (csvPath) {
