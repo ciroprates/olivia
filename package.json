@@ -24,6 +24,6 @@
     "csv-parse": "^4.16.3",
     "dotenv": "^16.3.1",
     "googleapis": "^92.0.0",
-    "pluggy-sdk": "0.72.0"
+    "pluggy-sdk": "0.75.0"
   }
 }
