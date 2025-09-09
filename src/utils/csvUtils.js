@@ -24,7 +24,7 @@ function formatTransactions(transactions) {
     const categoryFormatted = formatCategory(transaction.category);
     const ownerFormatted = formatOwner(account.owner);
     
-    return `"${classification}", "${date}", "${descriptionFormatted}", "${amount}", "${categoryFormatted}", "${ownerFormatted}", "${bankName}", "${accountTypeFormatted}", "${recurringTransaction}"`;
+    return `"${classification}", "${date}", "${descriptionFormatted}", "${amount}", "${categoryFormatted}", "${ownerFormatted}", "${bankName}", "${accountTypeFormatted}", "${recurringTransaction}", "${transaction.id}"`;
   });
 
   return header + rows.join('\n');
@@ -68,35 +68,43 @@ function getLastCSVDate() {
     console.warn(`Formato de data não reconhecido no arquivo: ${lastFile}`);
     return '';
   }
-  return match[1];
+  return match[1].split('T')[0];;
 }
 
-function determineStartDate(startDate = null) {
-  // caso startDate não seja informado, usa a data do último arquivo CSV
-  if (!startDate) {
-    const lastCSVDate = getLastCSVDate();
-    // Se não há arquivo CSV anterior, usa a data de ontem (no fuso de Brasília)
-    if (!lastCSVDate) {
-      const now = new Date();
-      const brazilNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-      brazilNow.setDate(brazilNow.getDate() - 1);
-      startDate = brazilNow.toISOString().slice(0,10); // YYYY-MM-DD
-    } else {
-      // Pega apenas a parte da data (YYYY-MM-DD)
-      const datePart = lastCSVDate.split('T')[0];
-      // caso lastCSVDate seja hoje, usa a data de ontem
-      const now = new Date();
-      const brazilNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-      const today = brazilNow.toISOString().slice(0,10);
-      if (datePart === today) {
-        brazilNow.setDate(brazilNow.getDate() - 1);
-        startDate = brazilNow.toISOString().slice(0,10);
-      } else {
-        startDate = datePart;
-      }
-    }
+function determineStartDate(startDate = null, updatedAt = null) {
+  // Se já tivermos uma data de início, retorna ela
+  if (startDate) {
+    return startDate; 
   }
-  return startDate;
+
+  // Tenta obter a data do último CSV
+  const lastCSVDate = getLastCSVDate();
+  
+  // Converte as datas para poder comparar
+  const lastCSVDateObj = lastCSVDate ? new Date(lastCSVDate) : null;
+  const updatedAtObj = updatedAt ? new Date(updatedAt) : null;
+
+  // Escolhe a data mais antiga entre as disponíveis
+  if (lastCSVDateObj && updatedAtObj) {
+    return lastCSVDateObj < updatedAtObj ? lastCSVDate : updatedAt.toISOString().split('T')[0];
+  } else if (lastCSVDateObj) {
+    return lastCSVDate;
+  } else if (updatedAtObj) {
+    return updatedAt.toISOString().split('T')[0];
+  } else {
+    // Se não tivermos data do CSV nem data de atualização, usa ontem
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday.toISOString().split('T')[0];
+  }
+}
+
+function today() {
+  const now = new Date();
+  // Usa o fuso horário de Brasília
+  const brazilNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  // Retorna no formato YYYY-MM-DD
+  return brazilNow.toISOString().split('T')[0];
 }
 
 function generateCSV(transactions) {
@@ -141,5 +149,6 @@ function generateCSV(transactions) {
 module.exports = {
   formatTransactions,
   generateCSV,  
-  determineStartDate
+  determineStartDate,
+  today
 }; 

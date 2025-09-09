@@ -18,11 +18,11 @@ class TransactionService {
    * Atualiza um item e aguarda até que a atualização seja concluída
    * @param {string} itemId - ID do item a ser atualizado
    * @param {string} itemName - Nome do item para logs
-   * @param {number} oneDayInMs - Tempo em milissegundos que define um dia
+   * @param {number} oneHourInMs - Tempo em milissegundos que define uma hora
    * @returns {Promise<Object|null>} O item atualizado ou null em caso de erro
    * @private
    */
-  async _updateAndWaitForItem(itemId, itemName, oneDayInMs) {
+  async _updateAndWaitForItem(itemId, itemName, oneHourInMs) {
     try {
       await this.client.updateItem(itemId);
       
@@ -39,8 +39,9 @@ class TransactionService {
           console.error(`Erro ao verificar status do item ${itemId}:`, error.message);
           return null;
         }
-      } while (item.status === 'UPDATING' || (item.updatedAt && (Date.now() - item.updatedAt) > oneDayInMs));
+      } while (item.status === 'UPDATING' || (item.updatedAt && (Date.now() - item.updatedAt) >= oneHourInMs));
 
+      console.log(`Atualização do item=[${bank.id} - ${bankName}] realizada. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
       return item;
     } catch (error) {
       console.error(`Erro ao atualizar item ${itemId}:`, error.message);
@@ -53,7 +54,6 @@ class TransactionService {
     const allTransactions = [];
     const pageSize = 100; // Tamanho máximo de página da API
 
-    const effectiveStartDate = determineStartDate(startDate);
 
     for (const bank of banks) {
       let item;
@@ -68,19 +68,8 @@ class TransactionService {
 
       console.log(`Recuperado item=[${bank.id} - ${bankName}]. Status: ${item.status}. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
 
-      // Caso última atualização seja anterior a 1 dia, atualiza o item
-      const oneDayInMs = 24 * 60 * 60 * 1000;
-      if (item.updatedAt && (Date.now() - item.updatedAt) > oneDayInMs) {
-        try {
-          item = await this._updateAndWaitForItem(bank.id, bankName, oneDayInMs);
-          if (item) {
-            console.log(`Atualização do item=[${bank.id} - ${bankName}] realizada. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
-          }
-        } catch (error) {
-          console.error(`Erro ao atualizar item ${bank.id}:`, error.message);
-          continue;
-        }
-      }
+      // Ensure we have a valid date in ISO 8601 format
+      const effectiveStartDate = determineStartDate(startDate, item.updatedAt);
 
       const accountTypes = [ACCOUNT_TYPES.BANK, ACCOUNT_TYPES.CREDIT];
 
@@ -128,11 +117,13 @@ class TransactionService {
             hasMore = transactions.page < transactions.totalPages;
             page++;
           }
+
+          console.log(`Recuperadas ${allTransactions.length} transações da conta ${account.name} do tipo ${accountType} a partir da data ${effectiveStartDate}.`);
         }
       }
     }
 
-    console.log(`Recuperadas ${allTransactions.length} transações a partir da data ${effectiveStartDate}.`);
+    console.log(`Recuperadas um total de ${allTransactions.length} transações`);
     return allTransactions;
  }
 }

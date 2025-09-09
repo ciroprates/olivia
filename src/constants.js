@@ -23,7 +23,7 @@ const RECURRING_LABELS = {
   NAO: 'Não'
 };
 
-const CSV_HEADER = '"Classificação", "Data", "Descrição", "Valor", "Categoria", "Dono", "Banco", "Conta", "Recorrente?"';
+const CSV_HEADER = '"Classificação", "Data", "Descrição", "Valor", "Categoria", "Dono", "Banco", "Conta", "Recorrente?", "Id"';
 
 const BUCKET_NAME = 'olivia-transactions';
 

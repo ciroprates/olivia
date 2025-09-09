@@ -16,7 +16,8 @@ async function main() {
     excludeCategories: [
      'Same person transfer',
      'Credit card payment'
-    ]
+    ]//,
+    //startDate: today()-30
   };
   
   try {
