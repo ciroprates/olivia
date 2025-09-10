@@ -8,12 +8,22 @@ const { ACCOUNT_TYPE_LABELS, RECURRING_LABELS, TRANSACTION_TYPES, CLASSIFICATION
  */
 function formatDate(transaction) {
 
-  const d = new Date(transaction.date);
+  const transactionDate = new Date(transaction.date);  
+  let d = transactionDate;
+
+  // Se a transação for parcelada no cartão de crédito, usa a data de compra
+  if (transaction.creditCardMetadata && transaction.creditCardMetadata.purchaseDate) {
+    const purchaseDate = new Date(transaction.creditCardMetadata.purchaseDate);
+    if (purchaseDate < transactionDate) {
+      d = purchaseDate;
+    }
+  }
+
   let month = d.getMonth() + 1; // getMonth() retorna 0-11, então somamos 1
   let year = d.getFullYear();
   
   // Verifica se é uma transação parcelada no cartão de crédito
-  if (transaction.creditCardMetadata && transaction.creditCardMetadata.installmentNumber > 1) {
+  if (transaction.creditCardMetadata && transaction.creditCardMetadata.installmentNumber > 1) {    
     // Calcula o incremento de meses baseado no número da parcela atual
     // Subtraímos 1 porque a primeira parcela já está na data original
     let monthIncrement = transaction.creditCardMetadata.installmentNumber - 1;
