@@ -141,7 +141,7 @@ function generateCSV(transactions) {
   const content = formatTransactions(newTransactions);
   fs.writeFileSync(filePath, content);
 
-  console.log(`\nArquivo CSV gerado: ${filePath}`);
+  console.log(`\nArquivo CSV gerado: ${filePath} com ${newTransactions.length} novas transações`);
   
   return filePath;
 }

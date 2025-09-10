@@ -62,11 +62,9 @@ class TransactionService {
       } catch (error) {
         console.error(`Erro ao buscar item do banco ${bank.id}:`, error.message);
         continue;
-      }
+      }      
 
-      const bankName = bank.name;
-
-      console.log(`Recuperado item=[${bank.id} - ${bankName}]. Status: ${item.status}. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
+      let bankName = bank.name;
 
       // Ensure we have a valid date in ISO 8601 format
       const effectiveStartDate = determineStartDate(startDate, item.updatedAt);
@@ -85,6 +83,7 @@ class TransactionService {
         for (const account of accountsResponse.results) {
           let page = 1;
           let hasMore = true;
+          let accountTransactionsCount = 0;
 
           while (hasMore) {
             let transactions;
@@ -112,13 +111,14 @@ class TransactionService {
                   accountType
                 });
               }
+              accountTransactionsCount++;
             });
 
             hasMore = transactions.page < transactions.totalPages;
             page++;
           }
-
-          console.log(`Recuperadas ${allTransactions.length} transações da conta ${account.name} do tipo ${accountType} a partir da data ${effectiveStartDate}.`);
+          
+          console.log(`Recuperadas ${accountTransactionsCount} transações da conta ${account.name} do tipo ${accountType} do(a) ${bank.owner} a partir da data ${effectiveStartDate}. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
         }
       }
     }
