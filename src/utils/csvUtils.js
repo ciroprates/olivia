@@ -16,7 +16,7 @@ function formatTransactions(transactions) {
   const header = CSV_HEADER + '\n';
   const rows = transactions.map(({ transaction, account, bankName, accountType }) => {
     const classification = formatClassification(transaction.type);
-    const date = formatDate(transaction.date);
+    const date = formatDate(transaction);
     const amount = formatAmount(transaction);
     const accountTypeFormatted = formatAccountType(accountType);
     const recurringTransaction = formatRecurringTransaction(transaction);

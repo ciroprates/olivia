@@ -1,9 +1,32 @@
 const categories = require('../categories.json');
 const { ACCOUNT_TYPE_LABELS, RECURRING_LABELS, TRANSACTION_TYPES, CLASSIFICATIONS } = require('../constants');
 
-function formatDate(date) {
-  const d = new Date(date);
-  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+/**
+ * Formata uma data, tratando especialmente transações parceladas no cartão de crédito 
+ * @param {Object} transaction - Objeto da transação contendo metadados
+ * @returns {string} Data formatada no formato YYYY/MM/DD
+ */
+function formatDate(transaction) {
+
+  const d = new Date(transaction.date);
+  let month = d.getMonth() + 1; // getMonth() retorna 0-11, então somamos 1
+  let year = d.getFullYear();
+  
+  // Verifica se é uma transação parcelada no cartão de crédito
+  if (transaction.creditCardMetadata && transaction.creditCardMetadata.installmentNumber > 1) {
+    // Calcula o incremento de meses baseado no número da parcela atual
+    // Subtraímos 1 porque a primeira parcela já está na data original
+    let monthIncrement = transaction.creditCardMetadata.installmentNumber - 1;
+    // Soma o incremento ao mês atual para obter o mês correto da parcela
+    month += monthIncrement;
+    // Se a soma dos meses ultrapassar dezembro, ajusta para o próximo ano
+    if (month > 12) {
+      year++; // Incrementa o ano
+      month -= 12; // Ajusta o mês      
+    }     
+  }    
+  // Retorna a data no formato YYYY/MM/DD para transações não parceladas
+  return `${year}/${month}/${d.getDate()}`;
 }
 
 function formatAmount(transaction) {

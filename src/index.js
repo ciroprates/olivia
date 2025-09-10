@@ -1,6 +1,6 @@
 require('dotenv').config();
 const path = require('path');
-const { banks } = require('./config');
+const { banks, options } = require('../config');
 const TransactionService = require('./services/transactionService');
 const { generateCSV } = require('./utils/csvUtils');
 const { uploadFile } = require('./utils/s3Utils');
@@ -11,19 +11,11 @@ const transactionService = new TransactionService(
   process.env.PLUGGY_CLIENT_SECRET
 );
 
-async function main() {
-  const options = {    
-    excludeCategories: [
-     'Same person transfer',
-     'Credit card payment'
-    ]//,
-    //startDate: today()-30
-  };
-  
+async function main() {  
   try {
     // Fetch and display transactions
-    const transactions = await transactionService.fetchTransactions(banks, options);    
-    const csvPath = generateCSV(transactions);    
+    const transactions = await transactionService.fetchTransactions(banks, options);
+    const csvPath = generateCSV(transactions);
     if (csvPath) {
       const fileName = path.basename(csvPath);
       await uploadFile(csvPath, BUCKET_NAME, fileName);
