@@ -120,28 +120,12 @@ function generateCSV(transactions) {
   const isoString = brazilNow.toISOString().slice(0,19).replace(/:/g, '-');
   const fileName = `transactions_${isoString}.csv`;
   const filePath = path.join(outputDir, fileName);
-
-  // Lê o conteúdo do último CSV
-  const lastCSVContent = getLastCSVContent();
-  const lastTransactions = new Set(lastCSVContent.split('\n').slice(1)); // Ignora o header
-
-  // Filtra apenas as transações que não existem no último CSV
-  const newTransactions = transactions.filter(({ transaction, account, bankName, accountType }) => {
-    const row = formatTransactions([{ transaction, account, bankName, accountType }]).split('\n')[1];
-    return !lastTransactions.has(row);
-  });
-
-  // Se não houver novas transações, retorna o caminho do último arquivo
-  if (newTransactions.length === 0) {
-    console.log('Nenhuma nova transação encontrada.');
-    return null;
-  }
-
+ 
   // Prepara e escreve o conteúdo do CSV
-  const content = formatTransactions(newTransactions);
+  const content = formatTransactions(transactions);
   fs.writeFileSync(filePath, content);
 
-  console.log(`\nArquivo CSV gerado: ${filePath} com ${newTransactions.length} novas transações`);
+  console.log(`\nArquivo CSV gerado: ${filePath} com ${transactions.length} transações`);
   
   return filePath;
 }

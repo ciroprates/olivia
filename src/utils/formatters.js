@@ -11,7 +11,7 @@ function formatDate(transaction) {
   const transactionDate = new Date(transaction.date);  
   let d = transactionDate;
 
-  // Se a transação for parcelada no cartão de crédito, usa a data de compra
+  // Se a data da compra for diferente da data da transação, usa a data de compra
   if (transaction.creditCardMetadata && transaction.creditCardMetadata.purchaseDate) {
     const purchaseDate = new Date(transaction.creditCardMetadata.purchaseDate);
     if (purchaseDate < transactionDate) {
