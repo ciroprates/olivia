@@ -126,6 +126,54 @@ class TransactionService {
     console.log(`Recuperadas um total de ${allTransactions.length} transações`);
     return allTransactions;
  }
+
+  async fetchTransactionById(transactionId) {
+    try {
+      const transaction = await this.client.fetchTransaction(transactionId);
+      return transaction;
+    } catch (error) {
+      console.error(`Erro ao buscar transação ${transactionId}:`, error.message);
+      throw error;
+    }
+  }
+
+  async deduplicateTransactions(items) {
+    const seen = new Map();
+
+    for (const item of items) {
+      const tx = item.transaction || item;
+      if (!tx) continue;
+
+      const dateVal = tx.date?.toISOString
+        ? tx.date.toISOString().slice(0, 10)
+        : (typeof tx.date === 'string' ? tx.date.slice(0, 10) : '');
+
+      const key = [
+        tx.accountId,
+        tx.amount,
+        dateVal,
+        (tx.descriptionRaw || tx.description || ''),
+        (tx.creditCardMetadata && tx.creditCardMetadata.billId) || ''
+      ].join('|');
+
+      const currentUpdated = new Date(tx.updatedAt || 0);
+      const existing = seen.get(key);
+      if (!existing) {
+        seen.set(key, item);
+      } else {
+        const existingTx = existing.transaction || existing;
+        const existingUpdated = new Date(existingTx?.updatedAt || 0);
+        if (currentUpdated > existingUpdated) {
+          seen.set(key, item);
+        }
+      }
+    }
+
+    const result = Array.from(seen.values());
+    console.log(`Deduplicadas ${items.length - result.length} transações`);
+    return result;
+  }
+
 }
 
 module.exports = TransactionService;
