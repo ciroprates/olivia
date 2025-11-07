@@ -37,7 +37,7 @@ function getLastCSVFile() {
   }
 
   const files = fs.readdirSync(outputDir)
-    .filter(file => file.startsWith('transactions_'))
+    .filter(file => file.startsWith('transactions_') && !file.startsWith('transactions_removed_'))
     .sort()
     .reverse();
 
@@ -107,7 +107,8 @@ function today() {
   return brazilNow.toISOString().split('T')[0];
 }
 
-function generateCSV(transactions) {
+function generateCSV(transactions, options = {}) {
+  const prefix = options.prefix || 'transactions';
   // Cria o diretório de saída se não existir
   const outputDir = path.join(process.cwd(), 'output');
   if (!fs.existsSync(outputDir)) {
@@ -118,7 +119,7 @@ function generateCSV(transactions) {
   const now = new Date();
   const brazilNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
   const isoString = brazilNow.toISOString().slice(0,19).replace(/:/g, '-');
-  const fileName = `transactions_${isoString}.csv`;
+  const fileName = `${prefix}_${isoString}.csv`;
   const filePath = path.join(outputDir, fileName);
  
   // Prepara e escreve o conteúdo do CSV
@@ -135,4 +136,4 @@ module.exports = {
   generateCSV,  
   determineStartDate,
   today
-}; 
+};

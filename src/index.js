@@ -16,12 +16,19 @@ async function main() {
     // Fetch and display transactions
     
     const transactions = await transactionService.fetchTransactions(banks, options);
-    const deduplicatedTransactions = await transactionService.deduplicateTransactions(transactions);
+    const { result: deduplicatedTransactions, removed } = await transactionService.deduplicateTransactions(transactions);
     const csvPath = generateCSV(deduplicatedTransactions);
     if (csvPath) {
       const fileName = path.basename(csvPath);
       await uploadFile(csvPath, BUCKET_NAME, fileName);
-    }    
+    }
+    if (removed && removed.length > 0) {
+      const removedCsvPath = generateCSV(removed, { prefix: 'transactions_removed' });
+      if (removedCsvPath) {
+        const removedFileName = path.basename(removedCsvPath);
+        await uploadFile(removedCsvPath, BUCKET_NAME, removedFileName);
+      }
+    }
   } catch (error) {
     console.error('Erro:', error.message);
   }

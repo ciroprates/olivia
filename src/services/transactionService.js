@@ -138,7 +138,8 @@ class TransactionService {
   }
 
   async deduplicateTransactions(items) {
-    const seen = new Map();
+    const bestByKey = new Map();
+    const allByKey = new Map();
 
     for (const item of items) {
       const tx = item.transaction || item;
@@ -156,22 +157,33 @@ class TransactionService {
         (tx.creditCardMetadata && tx.creditCardMetadata.billId) || ''
       ].join('|');
 
+      if (!allByKey.has(key)) allByKey.set(key, []);
+      allByKey.get(key).push(item);
+
       const currentUpdated = new Date(tx.updatedAt || 0);
-      const existing = seen.get(key);
+      const existing = bestByKey.get(key);
       if (!existing) {
-        seen.set(key, item);
+        bestByKey.set(key, item);
       } else {
         const existingTx = existing.transaction || existing;
         const existingUpdated = new Date(existingTx?.updatedAt || 0);
         if (currentUpdated > existingUpdated) {
-          seen.set(key, item);
+          bestByKey.set(key, item);
         }
       }
     }
 
-    const result = Array.from(seen.values());
-    console.log(`Deduplicadas ${items.length - result.length} transações`);
-    return result;
+    const result = Array.from(bestByKey.values());
+    const removed = [];
+    for (const [key, list] of allByKey.entries()) {
+      const best = bestByKey.get(key);
+      for (const it of list) {
+        if (it !== best) removed.push(it);
+      }
+    }
+
+    console.log(`Deduplicadas ${removed.length} transações`);
+    return { result, removed };
   }
 
 }
