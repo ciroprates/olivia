@@ -107,6 +107,27 @@ function today() {
   return brazilNow.toISOString().split('T')[0];
 }
 
+function _sortCsvByDate(content) {
+  const lines = content.split('\n');
+  const headerLine = lines.shift();
+  const dataLines = lines.filter(l => l.trim().length > 0);
+  const parseDate = (str) => {
+    const parts = str.split('/').map(Number);
+    const y = parts[0];
+    const m = (parts[1] || 1) - 1;
+    const d = parts[2] || 1;
+    return new Date(y, m, d).getTime();
+  };
+  dataLines.sort((a, b) => {
+    const fa = Array.from(a.matchAll(/"([^"]*)"/g)).map(m => m[1]);
+    const fb = Array.from(b.matchAll(/"([^"]*)"/g)).map(m => m[1]);
+    const da = parseDate(fa[1] || '1970/1/1');
+    const db = parseDate(fb[1] || '1970/1/1');
+    return da - db;
+  });
+  return [headerLine, ...dataLines].join('\n');
+}
+
 function generateCSV(transactions, options = {}) {
   const prefix = options.prefix || 'transactions';
   // Cria o diretório de saída se não existir
@@ -124,7 +145,8 @@ function generateCSV(transactions, options = {}) {
  
   // Prepara e escreve o conteúdo do CSV
   const content = formatTransactions(transactions);
-  fs.writeFileSync(filePath, content);
+  const sortedContent = _sortCsvByDate(content);
+  fs.writeFileSync(filePath, sortedContent);
 
   console.log(`\nArquivo CSV gerado: ${filePath} com ${transactions.length} transações`);
   

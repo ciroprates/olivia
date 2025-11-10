@@ -125,7 +125,9 @@ class TransactionService {
 
     console.log(`Recuperadas um total de ${allTransactions.length} transações`);
     return allTransactions;
- }
+  }
+
+  
 
   async fetchTransactionById(transactionId) {
     try {
