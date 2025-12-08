@@ -16,7 +16,8 @@ async function main() {
     // Fetch and display transactions
     
     const transactions = await transactionService.fetchTransactions(banks, options);
-    const { result: deduplicatedTransactions, removed } = await transactionService.deduplicateTransactions(transactions);
+    const transactionsWithInstallments = transactionService.createInstallmentTransactions(transactions);
+    const { result: deduplicatedTransactions, removed } = await transactionService.deduplicateTransactions(transactionsWithInstallments);
     const csvPath = generateCSV(deduplicatedTransactions);
     if (csvPath) {
       const fileName = path.basename(csvPath);
@@ -50,4 +51,4 @@ async function main() {
 }
 
 // Run the application
-main(); 
+main();

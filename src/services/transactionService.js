@@ -14,6 +14,48 @@ class TransactionService {
     });
   }
 
+  _appendInstallmentSuffix(description, installmentNumber, totalInstallments) {
+    if (!description) return description;
+    const suffix = `${installmentNumber}/${totalInstallments}`;
+    return description.includes(suffix) ? description : `${description} - ${suffix}`;
+  }
+
+  /**
+   * Cria transações futuras para compras parceladas que só retornaram a 1ª parcela
+   * mantendo as mesmas informações de conta/banco, ajustando o número da parcela,
+   * data (via formatter) e descrição.
+   */
+  createInstallmentTransactions(transactions) {
+    const synthetic = [];
+
+    transactions.forEach(item => {
+      const tx = item.transaction || item;
+      const meta = tx.creditCardMetadata;
+
+      if (!meta || meta.totalInstallments <= 1 || meta.installmentNumber !== 1) return;
+
+      for (let installmentNumber = 2; installmentNumber <= meta.totalInstallments; installmentNumber++) {
+        const transactionWithInstallment = {
+          ...tx,
+          id: 'synthetic-parcel-' + installmentNumber + '/' + meta.totalInstallments,
+          description: this._appendInstallmentSuffix(tx.description, installmentNumber, meta.totalInstallments),
+          descriptionRaw: this._appendInstallmentSuffix(tx.descriptionRaw, installmentNumber, meta.totalInstallments),
+          creditCardMetadata: {
+            ...meta,
+            installmentNumber
+          }
+        };
+
+        synthetic.push({
+          ...item,
+          transaction: transactionWithInstallment
+        });
+      }
+    });
+
+    return [...transactions, ...synthetic];
+  }
+
   /**
    * Atualiza um item e aguarda até que a atualização seja concluída
    * @param {string} itemId - ID do item a ser atualizado
