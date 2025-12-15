@@ -2,8 +2,9 @@ require('dotenv').config();
 const path = require('path');
 const { banks, options } = require('../config');
 const TransactionService = require('./services/transactionService');
-const { generateCSV } = require('./utils/csvUtils');
+const { generateCSV, getTransactionsArray } = require('./utils/csvUtils');
 const { uploadFile } = require('./utils/s3Utils');
+const { updateSheet } = require('./services/googleSheetsService');
 const { BUCKET_NAME } = require('./constants');
 
 const transactionService = new TransactionService(
@@ -11,24 +12,21 @@ const transactionService = new TransactionService(
   process.env.PLUGGY_CLIENT_SECRET
 );
 
-async function main() {  
+async function main() {
   try {
     // Fetch and display transactions
-    
+
     const transactions = await transactionService.fetchTransactions(banks, options);
     const transactionsWithInstallments = transactionService.createInstallmentTransactions(transactions);
     const { result: deduplicatedTransactions, removed } = await transactionService.deduplicateTransactions(transactionsWithInstallments);
     const csvPath = generateCSV(deduplicatedTransactions);
-    if (csvPath) {
-      const fileName = path.basename(csvPath);
-      await uploadFile(csvPath, BUCKET_NAME, fileName);
+
+    if (process.env.GOOGLE_SPREADSHEET_ID) {
+      const sheetData = getTransactionsArray(deduplicatedTransactions);
+      await updateSheet(process.env.GOOGLE_SPREADSHEET_ID, 'Homologação', sheetData);
     }
     if (removed && removed.length > 0) {
       const removedCsvPath = generateCSV(removed, { prefix: 'transactions_removed' });
-      if (removedCsvPath) {
-        const removedFileName = path.basename(removedCsvPath);
-        await uploadFile(removedCsvPath, BUCKET_NAME, removedFileName);
-      }
     }
   } catch (error) {
     console.error('Erro:', error.message);
@@ -47,7 +45,7 @@ async function main() {
   const transactionDetails4 = await transactionService.fetchTransactionById('69d92105-9995-488c-81db-424e30a0e66d');
   console.log(transactionDetails4);
   */
-  
+
 }
 
 // Run the application

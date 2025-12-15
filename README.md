@@ -8,6 +8,7 @@ A Node.js application that fetches, processes, and exports financial transaction
 - **Transaction Filtering**: Exclude specific transaction categories (e.g., transfers, credit card payments)
 - **Smart Date Handling**: Automatically fetches only new transactions based on last update
 - **CSV Export**: Exports transactions to a well-formatted CSV file
+- **Google Sheets Integration**: Automatically update a Google Sheet with transaction data
 - **S3 Integration**: Optional upload of generated CSV to AWS S3
 - **Incremental Updates**: Only processes new transactions on subsequent runs
 
@@ -51,6 +52,39 @@ AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret_key
 AWS_REGION=sa-east-1
 S3_BUCKET=your-bucket-name
+
+# Optional - Google Sheets Integration
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+GOOGLE_SPREADSHEET_ID=your-spreadsheet-id
+```
+
+### Google Sheets Setup (Optional)
+
+If you want to automatically update a Google Sheet with your transaction data:
+
+1. **Create a Service Account**:
+```bash
+gcloud iam service-accounts create olivia-sheets --display-name="Olivia Google Sheets"
+```
+
+2. **Download the Service Account Key**:
+```bash
+gcloud iam service-accounts keys create ~/olivia-service-account-key.json \
+  --iam-account=olivia-sheets@YOUR_PROJECT_ID.iam.gserviceaccount.com
+```
+
+3. **Share your Google Sheet**:
+   - Open your Google Sheet
+   - Click "Share"
+   - Add the service account email (found in the JSON key file, looks like `olivia-sheets@your-project.iam.gserviceaccount.com`)
+   - Give it "Editor" permissions
+
+4. **Create a tab named "Homologação"** in your spreadsheet (or modify the code to use a different tab name)
+
+5. **Update your `.env` file**:
+```
+GOOGLE_APPLICATION_CREDENTIALS=/home/your-user/olivia-service-account-key.json
+GOOGLE_SPREADSHEET_ID=1abc...xyz  # Found in the spreadsheet URL
 ```
 
 5. Configure your banks by creating a `config.js` file based on the example:

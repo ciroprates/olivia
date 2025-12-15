@@ -12,19 +12,24 @@ const {
 } = require('./formatters');
 const { CSV_HEADER } = require('../constants');
 
+function getTransactionRow({ transaction, account, bankName, accountType }) {
+  const classification = formatClassification(transaction.type);
+  const date = formatDate(transaction);
+  const amount = formatAmount(transaction);
+  const accountTypeFormatted = formatAccountType(accountType);
+  const recurringTransaction = formatRecurringTransaction(transaction);
+  const descriptionFormatted = formatDescription(transaction);
+  const categoryFormatted = formatCategory(transaction.category);
+  const ownerFormatted = formatOwner(account.owner);
+
+  return [classification, date, descriptionFormatted, amount, categoryFormatted, ownerFormatted, bankName, accountTypeFormatted, recurringTransaction, transaction.id];
+}
+
 function formatTransactions(transactions) {
   const header = CSV_HEADER + '\n';
-  const rows = transactions.map(({ transaction, account, bankName, accountType }) => {
-    const classification = formatClassification(transaction.type);
-    const date = formatDate(transaction);
-    const amount = formatAmount(transaction);
-    const accountTypeFormatted = formatAccountType(accountType);
-    const recurringTransaction = formatRecurringTransaction(transaction);
-    const descriptionFormatted = formatDescription(transaction);
-    const categoryFormatted = formatCategory(transaction.category);
-    const ownerFormatted = formatOwner(account.owner);
-    
-    return `"${classification}", "${date}", "${descriptionFormatted}", "${amount}", "${categoryFormatted}", "${ownerFormatted}", "${bankName}", "${accountTypeFormatted}", "${recurringTransaction}", "${transaction.id}"`;
+  const rows = transactions.map(t => {
+    const row = getTransactionRow(t);
+    return row.map(val => `"${val}"`).join(', ');
   });
 
   return header + rows.join('\n');
@@ -74,12 +79,12 @@ function getLastCSVDate() {
 function determineStartDate(startDate = null, updatedAt = null) {
   // Se já tivermos uma data de início, retorna ela
   if (startDate) {
-    return startDate; 
+    return startDate;
   }
 
   // Tenta obter a data do último CSV
   const lastCSVDate = getLastCSVDate();
-  
+
   // Converte as datas para poder comparar
   const lastCSVDateObj = lastCSVDate ? new Date(lastCSVDate) : null;
   const updatedAtObj = updatedAt ? new Date(updatedAt) : null;
@@ -139,23 +144,38 @@ function generateCSV(transactions, options = {}) {
   // Gera nome do arquivo com data e hora no formato ISO (fuso de Brasília)
   const now = new Date();
   const brazilNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-  const isoString = brazilNow.toISOString().slice(0,19).replace(/:/g, '-');
+  const isoString = brazilNow.toISOString().slice(0, 19).replace(/:/g, '-');
   const fileName = `${prefix}_${isoString}.csv`;
   const filePath = path.join(outputDir, fileName);
- 
+
   // Prepara e escreve o conteúdo do CSV
   const content = formatTransactions(transactions);
   const sortedContent = _sortCsvByDate(content);
   fs.writeFileSync(filePath, sortedContent);
 
   console.log(`\nArquivo CSV gerado: ${filePath} com ${transactions.length} transações`);
-  
+
   return filePath;
 }
 
 module.exports = {
   formatTransactions,
-  generateCSV,  
+  generateCSV,
   determineStartDate,
-  today
+  today,
+  getTransactionsArray
 };
+
+function getTransactionsArray(transactions) {
+  const header = CSV_HEADER.replace(/"/g, '').split(', ');
+  const rows = transactions.map(getTransactionRow);
+
+  rows.sort((a, b) => {
+    // a[1] is date in YYYY/MM/DD format
+    const dateA = new Date(a[1]);
+    const dateB = new Date(b[1]);
+    return dateA - dateB;
+  });
+
+  return [header, ...rows];
+}

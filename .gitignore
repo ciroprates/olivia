@@ -7,6 +7,13 @@ node_modules/
 # Configuration
 config.js
 
+# Google Cloud Service Account Keys
+*service-account*.json
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+
 # Logs
 *.log
 npm-debug.log*

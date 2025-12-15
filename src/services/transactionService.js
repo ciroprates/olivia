@@ -37,7 +37,7 @@ class TransactionService {
       for (let installmentNumber = 2; installmentNumber <= meta.totalInstallments; installmentNumber++) {
         const transactionWithInstallment = {
           ...tx,
-          id: 'synthetic-parcel-' + installmentNumber + '/' + meta.totalInstallments,
+          id: 'synthetic-parcel-' + tx.id + '-' + installmentNumber + '/' + meta.totalInstallments,
           description: this._appendInstallmentSuffix(tx.description, installmentNumber, meta.totalInstallments),
           descriptionRaw: this._appendInstallmentSuffix(tx.descriptionRaw, installmentNumber, meta.totalInstallments),
           creditCardMetadata: {
@@ -67,7 +67,7 @@ class TransactionService {
   async _updateAndWaitForItem(itemId, itemName, oneHourInMs) {
     try {
       await this.client.updateItem(itemId);
-      
+
       let item;
       do {
         // Aguarda alguns segundos antes da próxima requisição (para evitar erro 429)
@@ -104,7 +104,7 @@ class TransactionService {
       } catch (error) {
         console.error(`Erro ao buscar item do banco ${bank.id}:`, error.message);
         continue;
-      }      
+      }
 
       let bankName = bank.name;
 
@@ -159,7 +159,7 @@ class TransactionService {
             hasMore = transactions.page < transactions.totalPages;
             page++;
           }
-          
+
           console.log(`Recuperadas ${accountTransactionsCount} transações da conta ${account.name} do tipo ${accountType} do(a) ${bank.owner} a partir da data ${effectiveStartDate}. Última atualização: ${item.updatedAt.toLocaleDateString()}.`);
         }
       }
@@ -169,7 +169,7 @@ class TransactionService {
     return allTransactions;
   }
 
-  
+
 
   async fetchTransactionById(transactionId) {
     try {
