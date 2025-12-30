@@ -3,9 +3,7 @@ const path = require('path');
 const { banks, options } = require('../config');
 const TransactionService = require('./services/transactionService');
 const { generateCSV, getTransactionsArray } = require('./utils/csvUtils');
-const { uploadFile } = require('./utils/s3Utils');
 const { updateSheet } = require('./services/googleSheetsService');
-const { BUCKET_NAME } = require('./constants');
 
 const transactionService = new TransactionService(
   process.env.PLUGGY_CLIENT_ID,
