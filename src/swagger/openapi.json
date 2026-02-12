@@ -1,0 +1,339 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Olivia Transactions Execution API",
+    "version": "1.0.0",
+    "description": "API para iniciar processamento de transacoes e consultar status das execucoes."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Executions"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/executions/transactions": {
+      "post": {
+        "tags": ["Executions"],
+        "summary": "Inicia uma nova execucao do processamento de transacoes",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartExecutionRequest"
+              },
+              "example": {
+                "banks": [
+                  "1dc87ce3-58d5-4178-a309-f6a9d9848e21",
+                  "cf1c1196-d723-4049-951e-3fb64767b181"
+                ],
+                "options": {
+                  "startDate": "2026-02-01",
+                  "excludeCategories": ["Credit card payment"]
+                },
+                "sheet": {
+                  "enabled": true,
+                  "spreadsheetId": "1abc123",
+                  "tabName": "Homologacao"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Execucao aceita",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartExecutionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Payload invalido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Executions"],
+        "summary": "Lista execucoes registradas",
+        "responses": {
+          "200": {
+            "description": "Lista de execucoes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListExecutionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/executions/transactions/{executionId}": {
+      "get": {
+        "tags": ["Executions"],
+        "summary": "Consulta o detalhamento de uma execucao",
+        "parameters": [
+          {
+            "name": "executionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Execucao encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutionDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Execucao nao encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/executions/transactions/{executionId}/status": {
+      "get": {
+        "tags": ["Executions"],
+        "summary": "Consulta o status de uma execucao",
+        "parameters": [
+          {
+            "name": "executionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutionStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Execucao nao encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "StartExecutionRequest": {
+        "type": "object",
+        "description": "Todos os campos sao opcionais. Se omitidos, a API usa os valores padrao do config.js e .env.",
+        "properties": {
+          "banks": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Opcional. Lista de IDs de bancos definidos no config."
+          },
+          "options": {
+            "type": "object",
+            "description": "Opcional. Sobrescreve opcoes padrao da execucao.",
+            "properties": {
+              "startDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Opcional. Data inicial no formato YYYY-MM-DD."
+              },
+              "excludeCategories": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Opcional. Categorias a serem excluidas."
+              }
+            }
+          },
+          "sheet": {
+            "type": "object",
+            "description": "Opcional. Controle da atualizacao de planilha.",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "description": "Opcional. Se true, tenta atualizar Google Sheets."
+              },
+              "spreadsheetId": {
+                "type": "string",
+                "description": "Opcional. Se omitido, usa GOOGLE_SPREADSHEET_ID."
+              },
+              "tabName": {
+                "type": "string",
+                "description": "Opcional. Nome da aba (padrao: Homologacao)."
+              }
+            }
+          }
+        }
+      },
+      "StartExecutionResponse": {
+        "type": "object",
+        "required": ["executionId", "status", "createdAt", "links"],
+        "properties": {
+          "executionId": { "type": "string" },
+          "status": { "type": "string", "example": "QUEUED" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "links": {
+            "type": "object",
+            "required": ["self", "status"],
+            "properties": {
+              "self": { "type": "string" },
+              "status": { "type": "string" }
+            }
+          }
+        }
+      },
+      "ExecutionStatus": {
+        "type": "object",
+        "required": ["executionId", "status", "step", "progress", "finishedAt"],
+        "properties": {
+          "executionId": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["QUEUED", "RUNNING", "COMPLETED", "FAILED"]
+          },
+          "step": {
+            "type": "string",
+            "enum": [
+              "QUEUED",
+              "STARTED",
+              "FETCHING_TRANSACTIONS",
+              "CREATING_INSTALLMENTS",
+              "DEDUPLICATING",
+              "GENERATING_CSV",
+              "UPDATING_SHEET",
+              "FINALIZING",
+              "DONE",
+              "ERROR"
+            ]
+          },
+          "progress": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "finishedAt": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "ExecutionDetails": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ExecutionStatus" },
+          {
+            "type": "object",
+            "properties": {
+              "createdAt": { "type": "string", "format": "date-time" },
+              "startedAt": { "type": "string", "format": "date-time", "nullable": true },
+              "metrics": {
+                "type": "object",
+                "properties": {
+                  "transactionsFetched": { "type": "integer" },
+                  "installmentsCreated": { "type": "integer" },
+                  "duplicatesRemoved": { "type": "integer" }
+                }
+              },
+              "artifacts": {
+                "type": "object",
+                "properties": {
+                  "csvPath": { "type": "string", "nullable": true },
+                  "removedCsvPath": { "type": "string", "nullable": true }
+                }
+              },
+              "error": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "code": { "type": "string" },
+                  "message": { "type": "string" }
+                }
+              },
+              "request": {
+                "$ref": "#/components/schemas/StartExecutionRequest"
+              }
+            }
+          }
+        ]
+      },
+      "ListExecutionsResponse": {
+        "type": "object",
+        "required": ["total", "items"],
+        "properties": {
+          "total": { "type": "integer" },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExecutionDetails"
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": { "type": "string" },
+          "executionId": { "type": "string" }
+        }
+      }
+    }
+  }
+}

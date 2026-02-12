@@ -13,6 +13,7 @@ config.js
 !package.json
 !package-lock.json
 !tsconfig.json
+!src/swagger/openapi.json
 
 # Logs
 *.log

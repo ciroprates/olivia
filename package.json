@@ -2,9 +2,10 @@
   "name": "olivia",
   "version": "1.0.0",
   "description": "Financial transactions viewer using Pluggy API",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node src/server.js",
+    "start:cli": "node src/index.js"
   },
   "repository": {
     "type": "git",

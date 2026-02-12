@@ -100,8 +100,21 @@ cp config.example.js config.js
 ### Basic Usage
 
 ```bash
-node src/index.js
+npm run start:cli
 ```
+
+### API REST + Swagger
+
+```bash
+npm start
+```
+
+- Swagger UI: `http://localhost:3000/docs`
+- OpenAPI JSON: `http://localhost:3000/swagger.json`
+- Start execution: `POST /v1/executions/transactions`
+- Get execution details: `GET /v1/executions/transactions/:executionId`
+- Get execution status: `GET /v1/executions/transactions/:executionId/status`
+- List executions: `GET /v1/executions/transactions`
 
 
 
@@ -118,10 +131,13 @@ The application will:
 ```
 olivia/
 ├── src/
+│   ├── jobs/           # Pipeline de execucao das transacoes
 │   ├── services/       # Business logic
+│   ├── swagger/        # OpenAPI/Swagger spec
 │   ├── utils/          # Utility functions
 │   ├── constants.js    # Application constants
-│   └── index.js        # Entry point
+│   ├── index.js        # Entry point CLI
+│   └── server.js       # Entry point da API REST
 ├── config.js           # Bank configurations (create from config.example.js)
 ├── config.example.js   # Example configuration
 ├── .env                # Environment variables (create from .env.example)
