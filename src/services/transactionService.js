@@ -14,8 +14,24 @@ class TransactionService {
     });
   }
 
-  _appendInstallmentSuffix(description, installmentNumber, totalInstallments) {
+  _adjustInstallmentDescription(description, installmentNumber, totalInstallments) {
     if (!description) return description;
+
+    // Try to find pattern like "01/12" or "1/12" (meaning 1 of N) and replace it with current installment
+    const totalStr = totalInstallments.toString();
+    const currentStr = installmentNumber.toString();
+    // Regex matches "1/Total" or "01/Total" with optional padding on Total
+    const regex = new RegExp(`\\b(0?)1\/(0?${totalStr})\\b`);
+
+    if (regex.test(description)) {
+      return description.replace(regex, (match, prefix, totalPart) => {
+        // Maintain zero padding if present and needed
+        const newCurrent = (prefix === '0' && installmentNumber < 10) ? '0' + currentStr : currentStr;
+        return `${newCurrent}/${totalPart}`;
+      });
+    }
+
+    // Fallback: append suffix if not present
     const suffix = `${installmentNumber}/${totalInstallments}`;
     return description.includes(suffix) ? description : `${description} - ${suffix}`;
   }
@@ -38,8 +54,8 @@ class TransactionService {
         const transactionWithInstallment = {
           ...tx,
           id: 'synthetic-parcel-' + tx.id + '-' + installmentNumber + '/' + meta.totalInstallments,
-          description: this._appendInstallmentSuffix(tx.description, installmentNumber, meta.totalInstallments),
-          descriptionRaw: this._appendInstallmentSuffix(tx.descriptionRaw, installmentNumber, meta.totalInstallments),
+          description: this._adjustInstallmentDescription(tx.description, installmentNumber, meta.totalInstallments),
+          descriptionRaw: this._adjustInstallmentDescription(tx.descriptionRaw, installmentNumber, meta.totalInstallments),
           creditCardMetadata: {
             ...meta,
             installmentNumber
@@ -197,8 +213,8 @@ class TransactionService {
         tx.accountId,
         tx.amount,
         dateVal,
-        (tx.descriptionRaw || tx.description || ''),
-        (tx.creditCardMetadata && tx.creditCardMetadata.billId) || ''
+        (tx.descriptionRaw || tx.description || '')
+        // billId removed from key to allow matching across months
       ].join('|');
 
       if (!allByKey.has(key)) allByKey.set(key, []);
