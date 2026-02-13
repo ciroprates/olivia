@@ -79,6 +79,40 @@ npm start
 - Status da execução: `GET /v1/executions/transactions/:executionId/status`
 - Listar execuções: `GET /v1/executions/transactions`
 
+## Docker
+
+Build local da imagem:
+
+```bash
+docker build -t olivia:latest .
+```
+
+Executar container:
+
+```bash
+docker run --rm -p 3000:3000 --env-file .env olivia:latest
+```
+
+## CI/CD no GitHub Actions (ECR)
+
+Foi adicionado o workflow `.github/workflows/ecr.yml` para build e push da imagem no Amazon ECR a cada `push`.
+
+Pré-requisitos no repositório GitHub:
+
+- Nenhum secret obrigatório para o deploy padrão no ECR (a role está fixa no workflow)
+
+Destino ECR fixo no workflow:
+
+- Conta: `683684736241`
+- Região: `us-east-1`
+- Repositório: `olivia-api`
+- Role IAM (OIDC): `arn:aws:iam::683684736241:role/GitHubActionsECRPushRole-olivia-api`
+
+Comportamento dos tags:
+
+- Sempre publica `${GITHUB_SHA}`
+- Publica `latest` apenas quando o push for na branch `main`
+
 ## Payload da API
 
 Todos os campos são opcionais:
