@@ -61,6 +61,9 @@
                   "enabled": true,
                   "spreadsheetId": "1abc123",
                   "tabName": "Homologacao"
+                },
+                "artifacts": {
+                  "csvEnabled": true
                 }
               }
             }
@@ -187,7 +190,7 @@
     "schemas": {
       "StartExecutionRequest": {
         "type": "object",
-        "description": "Todos os campos sao opcionais. Se omitidos, a API usa os valores padrao do config.js e .env.",
+        "description": "Todos os campos sao opcionais. Se o payload vier vazio ({}), a API forca sheet.enabled=true e artifacts.csvEnabled=false.",
         "properties": {
           "banks": {
             "type": "array",
@@ -225,6 +228,16 @@
               "tabName": {
                 "type": "string",
                 "description": "Opcional. Nome da aba (padrao: Homologacao)."
+              }
+            }
+          },
+          "artifacts": {
+            "type": "object",
+            "description": "Opcional. Controle de artefatos de saida.",
+            "properties": {
+              "csvEnabled": {
+                "type": "boolean",
+                "description": "Opcional. Se false, nao gera CSV principal nem CSV de removidas."
               }
             }
           }
@@ -294,6 +307,7 @@
               "artifacts": {
                 "type": "object",
                 "properties": {
+                  "csvEnabled": { "type": "boolean" },
                   "csvPath": { "type": "string", "nullable": true },
                   "removedCsvPath": { "type": "string", "nullable": true }
                 }

@@ -96,7 +96,30 @@ function validateStartPayload(body) {
     return 'Campo "sheet" deve ser um objeto';
   }
 
+  if (body.artifacts !== undefined && (typeof body.artifacts !== 'object' || body.artifacts === null || Array.isArray(body.artifacts))) {
+    return 'Campo "artifacts" deve ser um objeto';
+  }
+
+  if (body.artifacts && body.artifacts.csvEnabled !== undefined && typeof body.artifacts.csvEnabled !== 'boolean') {
+    return 'Campo "artifacts.csvEnabled" deve ser boolean';
+  }
+
   return null;
+}
+
+function isEmptyPayload(body) {
+  return body && typeof body === 'object' && Object.keys(body).length === 0;
+}
+
+function normalizeStartPayload(body) {
+  if (isEmptyPayload(body)) {
+    return {
+      sheet: { enabled: true },
+      artifacts: { csvEnabled: false }
+    };
+  }
+
+  return body;
 }
 
 function createExecution(requestPayload) {
@@ -220,7 +243,7 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 400, { message: validationError });
       }
 
-      const execution = createExecution(body);
+      const execution = createExecution(normalizeStartPayload(body));
       setImmediate(() => {
         startExecution(execution);
       });

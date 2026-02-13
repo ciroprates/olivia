@@ -29,6 +29,8 @@ async function runTransactionExecution(params = {}, onProgress = () => {}) {
   const banks = resolveBanks(params.banks);
   const options = mergeOptions(params.options);
   const sheet = params.sheet || {};
+  const artifacts = params.artifacts || {};
+  const isCsvEnabled = artifacts.csvEnabled !== false;
 
   if (banks.length === 0) {
     throw new Error('Nenhum banco válido foi informado para execução');
@@ -43,12 +45,15 @@ async function runTransactionExecution(params = {}, onProgress = () => {}) {
   onProgress({ step: 'DEDUPLICATING', progress: 65 });
   const { result: deduplicatedTransactions, removed } = await transactionService.deduplicateTransactions(transactionsWithInstallments);
 
-  onProgress({ step: 'GENERATING_CSV', progress: 85 });
-  const csvPath = generateCSV(deduplicatedTransactions);
-
   let removedCsvPath = null;
-  if (removed && removed.length > 0) {
-    removedCsvPath = generateCSV(removed, { prefix: 'transactions_removed' });
+  let csvPath = null;
+  if (isCsvEnabled) {
+    onProgress({ step: 'GENERATING_CSV', progress: 85 });
+    csvPath = generateCSV(deduplicatedTransactions);
+
+    if (removed && removed.length > 0) {
+      removedCsvPath = generateCSV(removed, { prefix: 'transactions_removed' });
+    }
   }
 
   const isSheetEnabled = sheet.enabled === true;
@@ -70,6 +75,7 @@ async function runTransactionExecution(params = {}, onProgress = () => {}) {
       duplicatesRemoved: removed.length
     },
     artifacts: {
+      csvEnabled: isCsvEnabled,
       csvPath,
       removedCsvPath
     }
