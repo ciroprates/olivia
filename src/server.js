@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { randomUUID } = require('crypto');
 const { runTransactionExecution } = require('./jobs/transactionExecutionJob');
+const { logMissingEnvVars } = require('./utils/envUtils');
 
 const PORT = Number(process.env.PORT || 3000);
 const executionStore = new Map();
@@ -88,6 +89,10 @@ function validateStartPayload(body) {
     return 'Campo "banks" deve ser um array de IDs';
   }
 
+  if (Array.isArray(body.banks) && body.banks.some((bankId) => typeof bankId !== 'string' || bankId.trim() === '')) {
+    return 'Campo "banks" deve conter apenas IDs válidos (string não vazia)';
+  }
+
   if (body.options !== undefined && (typeof body.options !== 'object' || body.options === null || Array.isArray(body.options))) {
     return 'Campo "options" deve ser um objeto';
   }
@@ -107,18 +112,7 @@ function validateStartPayload(body) {
   return null;
 }
 
-function isEmptyPayload(body) {
-  return body && typeof body === 'object' && Object.keys(body).length === 0;
-}
-
 function normalizeStartPayload(body) {
-  if (isEmptyPayload(body)) {
-    return {
-      sheet: { enabled: true },
-      artifacts: { csvEnabled: false }
-    };
-  }
-
   return body;
 }
 
@@ -210,9 +204,21 @@ function getSwaggerHtml() {
 </html>`;
 }
 
+logMissingEnvVars();
+
 const server = http.createServer(async (req, res) => {
+  const requestId = randomUUID();
+  const startedAt = Date.now();
   const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
   const pathname = parsedUrl.pathname;
+  const fullPath = `${pathname}${parsedUrl.search || ''}`;
+  const method = req.method || 'UNKNOWN';
+
+  console.log(`[API] [${requestId}] ENTRADA ${method} ${fullPath}`);
+  res.on('finish', () => {
+    const elapsedMs = Date.now() - startedAt;
+    console.log(`[API] [${requestId}] SAIDA ${method} ${fullPath} ${res.statusCode} ${elapsedMs}ms`);
+  });
 
   if (req.method === 'GET' && pathname === '/health') {
     return sendJson(res, 200, { status: 'ok', timestamp: nowIso() });

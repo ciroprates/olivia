@@ -10,6 +10,68 @@ const transactionService = new TransactionService(
   process.env.PLUGGY_CLIENT_SECRET
 );
 
+function hasOwn(obj, key) {
+  return Object.prototype.hasOwnProperty.call(obj, key);
+}
+
+function parseBanksFromEnv() {
+  const rawBanks = process.env.BANKS;
+  if (!rawBanks || typeof rawBanks !== 'string') {
+    return [];
+  }
+
+  return rawBanks
+    .split(',')
+    .map((bankId) => bankId.trim())
+    .filter((bankId) => bankId.length > 0);
+}
+
+function parseCsvEnv(name) {
+  const raw = process.env[name];
+  if (raw === undefined) {
+    return { defined: false, value: [] };
+  }
+
+  const value = String(raw)
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+
+  return { defined: true, value };
+}
+
+function parseBooleanEnv(name) {
+  const raw = process.env[name];
+  if (raw === undefined) {
+    return { defined: false, value: null };
+  }
+
+  const normalized = String(raw).trim().toLowerCase();
+  if (['true', '1', 'yes', 'y', 'on'].includes(normalized)) {
+    return { defined: true, value: true };
+  }
+
+  if (['false', '0', 'no', 'n', 'off'].includes(normalized)) {
+    return { defined: true, value: false };
+  }
+
+  return { defined: false, value: null };
+}
+
+function parseStartDateEnv() {
+  const raw = process.env.OPTIONS_START_DATE;
+  if (raw === undefined) {
+    return { defined: false, value: null };
+  }
+
+  const normalized = String(raw).trim();
+  if (normalized.length === 0 || normalized.toLowerCase() === 'null') {
+    return { defined: true, value: null };
+  }
+
+  return { defined: true, value: normalized };
+}
+
 function mergeOptions(overrideOptions = {}) {
   return {
     ...defaultOptions,
@@ -17,20 +79,121 @@ function mergeOptions(overrideOptions = {}) {
   };
 }
 
+function mapBanksByIds(bankIds, fallbackOwner = 'Payload') {
+  const defaultBanksById = new Map(defaultBanks.map((bank) => [bank.id, bank]));
+
+  return bankIds.map((bankId) => {
+    const normalizedId = String(bankId).trim();
+    const fromConfig = defaultBanksById.get(normalizedId);
+    if (fromConfig) {
+      return fromConfig;
+    }
+
+    return {
+      id: normalizedId,
+      name: normalizedId,
+      owner: fallbackOwner
+    };
+  });
+}
+
 function resolveBanks(bankIds) {
-  if (!Array.isArray(bankIds) || bankIds.length === 0) {
-    return defaultBanks;
+  if (Array.isArray(bankIds)) {
+    return mapBanksByIds(bankIds, 'Payload');
   }
 
-  return defaultBanks.filter((bank) => bankIds.includes(bank.id));
+  const envBanks = parseBanksFromEnv();
+  if (envBanks.length > 0) {
+    return mapBanksByIds(envBanks, 'Env');
+  }
+
+  return defaultBanks;
+}
+
+function resolveOptions(payloadOptions = {}) {
+  const options = mergeOptions();
+  const envStartDate = parseStartDateEnv();
+  const envExcludeCategories = parseCsvEnv('OPTIONS_EXCLUDE_CATEGORIES');
+
+  if (envStartDate.defined) {
+    options.startDate = envStartDate.value;
+  }
+  if (envExcludeCategories.defined) {
+    options.excludeCategories = envExcludeCategories.value;
+  }
+
+  if (payloadOptions && typeof payloadOptions === 'object') {
+    if (hasOwn(payloadOptions, 'startDate')) {
+      options.startDate = payloadOptions.startDate;
+    }
+    if (hasOwn(payloadOptions, 'excludeCategories')) {
+      options.excludeCategories = payloadOptions.excludeCategories;
+    }
+  }
+
+  return options;
+}
+
+function resolveSheet(payloadSheet = {}) {
+  const sheet = {
+    enabled: true,
+    spreadsheetId: null,
+    tabName: 'Homologação'
+  };
+
+  const envSheetEnabled = parseBooleanEnv('SHEET_ENABLED');
+  if (envSheetEnabled.defined) {
+    sheet.enabled = envSheetEnabled.value;
+  }
+
+  if (process.env.SHEET_SPREADSHEET_ID) {
+    sheet.spreadsheetId = process.env.SHEET_SPREADSHEET_ID;
+  } else if (process.env.GOOGLE_SPREADSHEET_ID) {
+    sheet.spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
+  }
+
+  if (process.env.SHEET_TAB_NAME) {
+    sheet.tabName = process.env.SHEET_TAB_NAME;
+  }
+
+  if (payloadSheet && typeof payloadSheet === 'object') {
+    if (hasOwn(payloadSheet, 'enabled')) {
+      sheet.enabled = payloadSheet.enabled;
+    }
+    if (hasOwn(payloadSheet, 'spreadsheetId')) {
+      sheet.spreadsheetId = payloadSheet.spreadsheetId;
+    }
+    if (hasOwn(payloadSheet, 'tabName')) {
+      sheet.tabName = payloadSheet.tabName;
+    }
+  }
+
+  return sheet;
+}
+
+function resolveArtifacts(payloadArtifacts = {}) {
+  const artifacts = {
+    csvEnabled: false
+  };
+
+  const envCsvEnabled = parseBooleanEnv('ARTIFACTS_CSV_ENABLED');
+  if (envCsvEnabled.defined) {
+    artifacts.csvEnabled = envCsvEnabled.value;
+  }
+
+  if (payloadArtifacts && typeof payloadArtifacts === 'object' && hasOwn(payloadArtifacts, 'csvEnabled')) {
+    artifacts.csvEnabled = payloadArtifacts.csvEnabled;
+  }
+
+  return artifacts;
 }
 
 async function runTransactionExecution(params = {}, onProgress = () => {}) {
   const banks = resolveBanks(params.banks);
-  const options = mergeOptions(params.options);
-  const sheet = params.sheet || {};
-  const artifacts = params.artifacts || {};
-  const isCsvEnabled = artifacts.csvEnabled !== false;
+  const options = resolveOptions(params.options);
+  const sheet = resolveSheet(params.sheet);
+  const artifacts = resolveArtifacts(params.artifacts);
+  const isCsvEnabled = artifacts.csvEnabled === true;
 
   if (banks.length === 0) {
     throw new Error('Nenhum banco válido foi informado para execução');
@@ -57,7 +220,7 @@ async function runTransactionExecution(params = {}, onProgress = () => {}) {
   }
 
   const isSheetEnabled = sheet.enabled === true;
-  const spreadsheetId = sheet.spreadsheetId || process.env.GOOGLE_SPREADSHEET_ID;
+  const spreadsheetId = sheet.spreadsheetId || null;
   const tabName = sheet.tabName || 'Homologação';
 
   if (isSheetEnabled && spreadsheetId) {

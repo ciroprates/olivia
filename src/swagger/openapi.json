@@ -190,16 +190,16 @@
     "schemas": {
       "StartExecutionRequest": {
         "type": "object",
-        "description": "Todos os campos sao opcionais. Se o payload vier vazio ({}), a API forca sheet.enabled=true e artifacts.csvEnabled=false.",
+        "description": "Precedencia de parametros: payload > env > config.js > defaults internos.",
         "properties": {
           "banks": {
             "type": "array",
             "items": { "type": "string" },
-            "description": "Opcional. Lista de IDs de bancos definidos no config."
+            "description": "Opcional. Lista de item IDs da Pluggy. Se omitido, usa BANKS (env) e depois config.js."
           },
           "options": {
             "type": "object",
-            "description": "Opcional. Sobrescreve opcoes padrao da execucao.",
+            "description": "Opcional. Opcoes usadas na execucao.",
             "properties": {
               "startDate": {
                 "type": "string",
@@ -223,7 +223,7 @@
               },
               "spreadsheetId": {
                 "type": "string",
-                "description": "Opcional. Se omitido, usa GOOGLE_SPREADSHEET_ID."
+                "description": "Opcional. Se omitido, usa SHEET_SPREADSHEET_ID e depois GOOGLE_SPREADSHEET_ID."
               },
               "tabName": {
                 "type": "string",

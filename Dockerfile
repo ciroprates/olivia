@@ -6,7 +6,8 @@ COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY src ./src
-COPY config.example.js ./config.js
+COPY config*.js ./
+RUN [ -f ./config.js ] || cp ./config.example.js ./config.js
 
 RUN mkdir -p /app/output && chown -R node:node /app
 

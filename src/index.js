@@ -1,6 +1,9 @@
 require('dotenv').config();
 
 const { runTransactionExecution } = require('./jobs/transactionExecutionJob');
+const { logMissingEnvVars } = require('./utils/envUtils');
+
+logMissingEnvVars();
 
 async function main() {
   try {
