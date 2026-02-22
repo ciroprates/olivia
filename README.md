@@ -149,7 +149,7 @@ Ordem de precedência dos parâmetros:
 
 Aplicação por grupo:
 
-- `banks`: `payload.banks` > `BANKS` > `config.js`
+- `banks`: `payload.banks` > `BANKS_JSON` > `config.js`
 - `options.startDate`: `payload.options.startDate` > `OPTIONS_START_DATE` > `config.js`
 - `options.excludeCategories`: `payload.options.excludeCategories` > `OPTIONS_EXCLUDE_CATEGORIES` > `config.js`
 - `sheet.enabled`: `payload.sheet.enabled` > `SHEET_ENABLED` > default `true`
@@ -163,7 +163,7 @@ Aplicação por grupo:
 | --- | --- | --- | --- |
 | `PLUGGY_CLIENT_ID` | Sim | `pk_live_abc123` | Client ID da Pluggy usado para autenticar chamadas da API de transações. |
 | `PLUGGY_CLIENT_SECRET` | Sim | `sk_live_def456` | Client Secret da Pluggy usado junto com o `PLUGGY_CLIENT_ID`. |
-| `BANKS` | Não | `item-id-1,item-id-2` | Lista CSV de item IDs da Pluggy usada quando `payload.banks` não é enviado. |
+| `BANKS_JSON` | Não | `[{"id":"item-id-1","name":"Nubank","owner":"Ciro"},{"id":"item-id-2","name":"Itaú","owner":"Ursula"}]` | Array JSON de bancos. Cada item deve ter `id`; `name` e `owner` são opcionais (`name` cai para o próprio `id` quando ausente). |
 | `OPTIONS_START_DATE` | Não | `2026-02-01` | Data inicial para busca de transações (`YYYY-MM-DD`). Aceita vazio ou `null` para detecção automática. |
 | `OPTIONS_EXCLUDE_CATEGORIES` | Não | `Same person transfer,Credit card payment` | Lista CSV de categorias a excluir da coleta. |
 | `SHEET_ENABLED` | Não | `true` | Habilita/desabilita atualização de planilha (`true/false`, também aceita `1/0`, `yes/no`). |
@@ -177,6 +177,8 @@ Aplicação por grupo:
 
 Observações:
 - Para executar a aplicação com Pluggy, apenas `PLUGGY_CLIENT_ID` e `PLUGGY_CLIENT_SECRET` são obrigatórias.
+- `BANKS_JSON` é o formato recomendado para evitar que a coluna `Banco` seja preenchida com item IDs quando não houver mapeamento no `config.js`.
+- Se `BANKS_JSON` estiver inválido (JSON malformado ou valor que não seja array), a aplicação ignora essa variável e segue para `config.js`.
 - Para atualizar Google Sheets, é necessário informar um ID de planilha (`SHEET_SPREADSHEET_ID` ou `GOOGLE_SPREADSHEET_ID`) e credenciais válidas em `GOOGLE_APPLICATION_CREDENTIALS`.
 
 ## Saídas geradas

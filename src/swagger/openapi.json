@@ -195,7 +195,7 @@
           "banks": {
             "type": "array",
             "items": { "type": "string" },
-            "description": "Opcional. Lista de item IDs da Pluggy. Se omitido, usa BANKS (env) e depois config.js."
+            "description": "Opcional. Lista de item IDs da Pluggy. Se omitido, usa BANKS_JSON (env) e depois config.js."
           },
           "options": {
             "type": "object",

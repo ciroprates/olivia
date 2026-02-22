@@ -14,16 +14,57 @@ function hasOwn(obj, key) {
   return Object.prototype.hasOwnProperty.call(obj, key);
 }
 
-function parseBanksFromEnv() {
-  const rawBanks = process.env.BANKS;
-  if (!rawBanks || typeof rawBanks !== 'string') {
+function normalizeBankEntry(entry, fallbackOwner = 'Env') {
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+    return null;
+  }
+
+  const id = String(entry.id || '').trim();
+  if (!id) {
+    return null;
+  }
+
+  const nameRaw = entry.name;
+  const ownerRaw = entry.owner;
+
+  const name = nameRaw === undefined || nameRaw === null || String(nameRaw).trim().length === 0
+    ? id
+    : String(nameRaw).trim();
+
+  const owner = ownerRaw === undefined || ownerRaw === null || String(ownerRaw).trim().length === 0
+    ? fallbackOwner
+    : String(ownerRaw).trim();
+
+  return { id, name, owner };
+}
+
+function parseBanksJsonEnv() {
+  const rawBanksJson = process.env.BANKS_JSON;
+  if (rawBanksJson === undefined) {
     return [];
   }
 
-  return rawBanks
-    .split(',')
-    .map((bankId) => bankId.trim())
-    .filter((bankId) => bankId.length > 0);
+  const normalizedRaw = String(rawBanksJson).trim();
+  if (normalizedRaw.length === 0) {
+    return [];
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(normalizedRaw);
+  } catch (error) {
+    console.warn('BANKS_JSON inválido: não foi possível fazer parse do JSON. Ignorando variável.');
+    return [];
+  }
+
+  if (!Array.isArray(parsed)) {
+    console.warn('BANKS_JSON inválido: o valor deve ser um array JSON. Ignorando variável.');
+    return [];
+  }
+
+  return parsed
+    .map((entry) => normalizeBankEntry(entry, 'Env'))
+    .filter(Boolean);
 }
 
 function parseCsvEnv(name) {
@@ -102,9 +143,9 @@ function resolveBanks(bankIds) {
     return mapBanksByIds(bankIds, 'Payload');
   }
 
-  const envBanks = parseBanksFromEnv();
-  if (envBanks.length > 0) {
-    return mapBanksByIds(envBanks, 'Env');
+  const envBanksJson = parseBanksJsonEnv();
+  if (envBanksJson.length > 0) {
+    return envBanksJson;
   }
 
   return defaultBanks;
