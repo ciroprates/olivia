@@ -36,12 +36,45 @@ class TransactionService {
     return description.includes(suffix) ? description : `${description} - ${suffix}`;
   }
 
+  _normalizeInstallmentDescription(description, totalInstallments) {
+    if (!description) return '';
+    const total = totalInstallments.toString();
+    const paddedTotal = total.length === 1 ? '0' + total : total;
+
+    let normalized = description
+      .replace(new RegExp(`\\s*-\\s*\\d{1,2}\\/${paddedTotal}$`), '')
+      .replace(new RegExp(`\\s*-\\s*\\d{1,2}\\/${total}$`), '')
+      .replace(new RegExp(`\\s+\\d{1,2}\\/${paddedTotal}\\b`), '')
+      .replace(new RegExp(`\\s+\\d{1,2}\\/${total}\\b`), '');
+
+    return normalized.trim();
+  }
+
+  _getPurchaseKey(tx) {
+    const meta = tx.creditCardMetadata;
+    const rawDesc = tx.descriptionRaw || tx.description || '';
+    const normalized = this._normalizeInstallmentDescription(rawDesc, meta.totalInstallments);
+    return `${tx.accountId || ''}|${tx.amount != null ? tx.amount : ''}|${meta.totalInstallments}|${normalized}`;
+  }
+
   /**
    * Cria transações futuras para compras parceladas que só retornaram a 1ª parcela
    * mantendo as mesmas informações de conta/banco, ajustando o número da parcela,
    * data (via formatter) e descrição.
    */
   createInstallmentTransactions(transactions) {
+    // Pass 1: registrar parcelas reais existentes por compra
+    const realInstallments = new Map();
+    transactions.forEach(item => {
+      const tx = item.transaction || item;
+      const meta = tx.creditCardMetadata;
+      if (!meta || meta.totalInstallments <= 1) return;
+      const key = this._getPurchaseKey(tx);
+      if (!realInstallments.has(key)) realInstallments.set(key, new Set());
+      realInstallments.get(key).add(meta.installmentNumber);
+    });
+
+    // Pass 2: gerar sintéticas apenas para lacunas
     const synthetic = [];
 
     transactions.forEach(item => {
@@ -50,21 +83,21 @@ class TransactionService {
 
       if (!meta || meta.totalInstallments <= 1 || meta.installmentNumber !== 1) return;
 
+      const key = this._getPurchaseKey(tx);
+      const existingNumbers = realInstallments.get(key) || new Set();
+
       for (let installmentNumber = 2; installmentNumber <= meta.totalInstallments; installmentNumber++) {
-        const transactionWithInstallment = {
-          ...tx,
-          id: 'synthetic-parcel-' + tx.id + '-' + installmentNumber + '/' + meta.totalInstallments,
-          description: this._adjustInstallmentDescription(tx.description, installmentNumber, meta.totalInstallments),
-          descriptionRaw: this._adjustInstallmentDescription(tx.descriptionRaw, installmentNumber, meta.totalInstallments),
-          creditCardMetadata: {
-            ...meta,
-            installmentNumber
-          }
-        };
+        if (existingNumbers.has(installmentNumber)) continue;
 
         synthetic.push({
           ...item,
-          transaction: transactionWithInstallment
+          transaction: {
+            ...tx,
+            id: 'synthetic-parcel-' + tx.id + '-' + installmentNumber + '/' + meta.totalInstallments,
+            description: this._adjustInstallmentDescription(tx.description, installmentNumber, meta.totalInstallments),
+            descriptionRaw: this._adjustInstallmentDescription(tx.descriptionRaw, installmentNumber, meta.totalInstallments),
+            creditCardMetadata: { ...meta, installmentNumber }
+          }
         });
       }
     });
