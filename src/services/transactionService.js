@@ -68,7 +68,7 @@ class TransactionService {
     transactions.forEach(item => {
       const tx = item.transaction || item;
       const meta = tx.creditCardMetadata;
-      if (!meta || meta.totalInstallments <= 1) return;
+      if (!meta || !meta.totalInstallments || meta.totalInstallments <= 1) return;
       const key = this._getPurchaseKey(tx);
       if (!realInstallments.has(key)) realInstallments.set(key, new Set());
       realInstallments.get(key).add(meta.installmentNumber);
@@ -81,7 +81,7 @@ class TransactionService {
       const tx = item.transaction || item;
       const meta = tx.creditCardMetadata;
 
-      if (!meta || meta.totalInstallments <= 1 || meta.installmentNumber !== 1) return;
+      if (!meta || !meta.totalInstallments || meta.totalInstallments <= 1 || meta.installmentNumber !== 1) return;
 
       const key = this._getPurchaseKey(tx);
       const existingNumbers = realInstallments.get(key) || new Set();
