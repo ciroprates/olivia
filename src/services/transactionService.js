@@ -21,7 +21,7 @@ class TransactionService {
     const totalStr = totalInstallments.toString();
     const currentStr = installmentNumber.toString();
     // Regex matches "1/Total" or "01/Total" with optional padding on Total
-    const regex = new RegExp(`\\b(0?)1\/(0?${totalStr})\\b`);
+    const regex = new RegExp(`(?<!\\d)(0?)1\\/(0?${totalStr})\\b`);
 
     if (regex.test(description)) {
       return description.replace(regex, (match, prefix, totalPart) => {
@@ -45,16 +45,20 @@ class TransactionService {
       .replace(new RegExp(`\\s*-\\s*\\d{1,2}\\/${paddedTotal}$`), '')
       .replace(new RegExp(`\\s*-\\s*\\d{1,2}\\/${total}$`), '')
       .replace(new RegExp(`\\s+\\d{1,2}\\/${paddedTotal}\\b`), '')
-      .replace(new RegExp(`\\s+\\d{1,2}\\/${total}\\b`), '');
+      .replace(new RegExp(`\\s+\\d{1,2}\\/${total}\\b`), '')
+      .replace(new RegExp(`(?<!\\d)\\d{1,2}\\/${paddedTotal}$`), '')
+      .replace(new RegExp(`(?<!\\d)\\d{1,2}\\/${total}$`), '');
 
     return normalized.trim();
   }
 
-  _getPurchaseKey(tx) {
+  _getPurchaseKey(item) {
+    const tx = item.transaction || item;
     const meta = tx.creditCardMetadata;
     const rawDesc = tx.descriptionRaw || tx.description || '';
     const normalized = this._normalizeInstallmentDescription(rawDesc, meta.totalInstallments);
-    return `${tx.accountId || ''}|${tx.amount != null ? tx.amount : ''}|${meta.totalInstallments}|${normalized}`;
+    const bankName = item.bankName || '';
+    return `${bankName}|${tx.accountId || ''}|${tx.amount != null ? tx.amount : ''}|${meta.totalInstallments}|${normalized}`;
   }
 
   /**
@@ -69,7 +73,7 @@ class TransactionService {
       const tx = item.transaction || item;
       const meta = tx.creditCardMetadata;
       if (!meta || !meta.totalInstallments || meta.totalInstallments <= 1) return;
-      const key = this._getPurchaseKey(tx);
+      const key = this._getPurchaseKey(item);
       if (!realInstallments.has(key)) realInstallments.set(key, new Set());
       realInstallments.get(key).add(meta.installmentNumber);
     });
@@ -83,7 +87,7 @@ class TransactionService {
 
       if (!meta || !meta.totalInstallments || meta.totalInstallments <= 1 || meta.installmentNumber !== 1) return;
 
-      const key = this._getPurchaseKey(tx);
+      const key = this._getPurchaseKey(item);
       const existingNumbers = realInstallments.get(key) || new Set();
 
       for (let installmentNumber = 2; installmentNumber <= meta.totalInstallments; installmentNumber++) {

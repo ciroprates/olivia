@@ -5,7 +5,8 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "start:cli": "node src/index.js"
+    "start:cli": "node src/index.js",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -26,5 +27,8 @@
     "dotenv": "^16.3.1",
     "googleapis": "^92.0.0",
     "pluggy-sdk": "0.82.0"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0"
   }
 }
